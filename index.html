@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCI Access Maps — Koka Cardiology</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #21262d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #e05c2a;
+    --accent2: #3b82f6;
+    --gold: #d4a843;
+  }
+
+  html { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+
+  body {
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* — Header — */
+  header {
+    padding: 72px 48px 56px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--text);
+    max-width: 700px;
+    margin-bottom: 20px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .subtitle {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 560px;
+    font-weight: 300;
+  }
+
+  /* — Divider — */
+  .divider {
+    max-width: 1100px;
+    margin: 0 auto 56px;
+    padding: 0 48px;
+  }
+  .divider hr {
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* — Section label — */
+  .section-label {
+    max-width: 1100px;
+    margin: 0 auto 28px;
+    padding: 0 48px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* — Grid — */
+  .grid {
+    max-width: 1100px;
+    margin: 0 auto 80px;
+    padding: 0 48px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; padding: 0 24px; }
+    header { padding: 48px 24px 40px; }
+    .section-label, .divider { padding: 0 24px; }
+  }
+
+  /* — Card — */
+  .card {
+    display: block;
+    text-decoration: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  }
+
+  .card-flag {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .flag-bivariate {
+    background: rgba(224, 92, 42, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(224, 92, 42, 0.3);
+  }
+
+  .flag-standard {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--accent2);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+  }
+
+  /* — Preview area — */
+  .card-preview {
+    height: 160px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .preview-us {
+    background: linear-gradient(135deg, #1a2332 0%, #0f1923 50%, #162030 100%);
+  }
+  .preview-canada {
+    background: linear-gradient(135deg, #1a2032 0%, #10172a 50%, #16203a 100%);
+  }
+
+  /* SVG map silhouette decorations */
+  .preview-dots {
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background-image: radial-gradient(circle, #e6edf3 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  .preview-label {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: rgba(230, 237, 243, 0.12);
+    letter-spacing: 0.04em;
+    font-style: italic;
+    position: relative;
+    z-index: 1;
+    user-select: none;
+  }
+
+  .preview-bivar-swatch {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    display: flex;
+    gap: 3px;
+  }
+
+  .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+  }
+
+  /* — Card body — */
+  .card-body {
+    padding: 22px 24px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-country {
+    font-family: 'DM Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .card-arrow {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .card:hover .card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .card-arrow svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* — Footer — */
+  footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 48px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .footer-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .footer-brand span { color: var(--text); }
+
+  .footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Koka Cardiology · Health Policy Research</div>
+  <h1>PCI Access Maps<br><em>U.S. &amp; Canada</em></h1>
+  <p class="subtitle">Interactive maps examining cardiac catheterization lab access by population density and drive time — challenging the conventional narrative on rural PCI access.</p>
+</header>
+
+<div class="divider"><hr></div>
+
+<div class="section-label">United States</div>
+
+<div class="grid">
+
+  <!-- US Bivariate -->
+  <a class="card" href="pci_bivariate_map.html">
+    <span class="card-flag flag-bivariate">Bivariate</span>
+    <div class="card-preview preview-us">
+      <div class="preview-dots"></div>
+      <div class="preview-label">United States</div>
+      <div class="preview-bivar-swatch">
+        <div class="swatch" style="background:#f0e6c8"></div>
+        <div class="swatch" style="background:#e8b86d"></div>
+        <div class="swatch" style="background:#c87941"></div>
+        <div class="swatch" style="background:#9eb8d4"></div>
+        <div class="swatch" style="background:#7a94b8"></div>
+        <div class="swatch" style="background:#4a6fa0"></div>
+        <div class="swatch" style="background:#6b8f7a"></div>
+        <div class="swatch" style="background:#4a7060"></div>
+        <div class="swatch" style="background:#1e3a2f"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-country">United States · 3,143 Counties</div>
+      <div class="card-title">Density × Drive Time Bivariate</div>
+      <div class="card-desc">Population density crossed with 90-minute PCI access. Reveals that dense + far is essentially nonexistent in the U.S.</div>
+      <div class="card-arrow">
+        Open map
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- US Standard -->
+  <a class="card" href="pci_access_map.html">
+    <span class="card-flag flag-standard">Choropleth</span>
+    <div class="card-preview preview-us">
+      <div class="preview-dots"></div>
+      <div class="preview-label">United States</div>
+      <div class="preview-bivar-swatch">
+        <div class="swatch" style="background:#d4e8f0"></div>
+        <div class="swatch" style="background:#8bbdd4"></div>
+        <div class="swatch" style="background:#4a92b8"></div>
+        <div class="swatch" style="background:#2a6a94"></div>
+        <div class="swatch" style="background:#e05c2a"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-country">United States · 3,143 Counties</div>
+      <div class="card-title">PCI Drive-Time Access</div>
+      <div class="card-desc">County-level drive time to nearest PCI-capable hospital, using CMS billing data and Census pop-weighted centroids.</div>
+      <div class="card-arrow">
+        Open map
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </div>
+    </div>
+  </a>
+
+</div>
+
+<div class="section-label">Canada</div>
+
+<div class="grid">
+
+  <!-- Canada Bivariate -->
+  <a class="card" href="canada_pci_bivariate_map.html">
+    <span class="card-flag flag-bivariate">Bivariate</span>
+    <div class="card-preview preview-canada">
+      <div class="preview-dots"></div>
+      <div class="preview-label">Canada</div>
+      <div class="preview-bivar-swatch">
+        <div class="swatch" style="background:#f0e6c8"></div>
+        <div class="swatch" style="background:#e8b86d"></div>
+        <div class="swatch" style="background:#c87941"></div>
+        <div class="swatch" style="background:#9eb8d4"></div>
+        <div class="swatch" style="background:#7a94b8"></div>
+        <div class="swatch" style="background:#4a6fa0"></div>
+        <div class="swatch" style="background:#6b8f7a"></div>
+        <div class="swatch" style="background:#4a7060"></div>
+        <div class="swatch" style="background:#1e3a2f"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-country">Canada · 282 Census Divisions</div>
+      <div class="card-title">Density × Drive Time Bivariate</div>
+      <div class="card-desc">Same methodology applied to Canada. 28.7% of Canadians live beyond 90 minutes of PCI — vs. 3.5% in the U.S.</div>
+      <div class="card-arrow">
+        Open map
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- Canada Standard -->
+  <a class="card" href="canada_pci_access_map.html">
+    <span class="card-flag flag-standard">Choropleth</span>
+    <div class="card-preview preview-canada">
+      <div class="preview-dots"></div>
+      <div class="preview-label">Canada</div>
+      <div class="preview-bivar-swatch">
+        <div class="swatch" style="background:#d4e8f0"></div>
+        <div class="swatch" style="background:#8bbdd4"></div>
+        <div class="swatch" style="background:#4a92b8"></div>
+        <div class="swatch" style="background:#2a6a94"></div>
+        <div class="swatch" style="background:#e05c2a"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-country">Canada · 282 Census Divisions</div>
+      <div class="card-title">PCI Drive-Time Access</div>
+      <div class="card-desc">Census division–level drive time to nearest PCI center, using CIHI and provincial cardiac program directories.</div>
+      <div class="card-arrow">
+        Open map
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </div>
+    </div>
+  </a>
+
+</div>
+
+<footer>
+  <div class="footer-brand"><span>Koka Cardiology</span> · PCI Access Research</div>
+  <div class="footer-note">Data: CMS · Census 2020 · CIHI · Statistics Canada 2021</div>
+</footer>
+
+</body>
+</html>
