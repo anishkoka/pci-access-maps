@@ -316,28 +316,22 @@
 
 <div class="grid">
 
-  <!-- US Bivariate -->
-  <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_bivariate_map.html">
-    <span class="card-flag flag-bivariate">Bivariate</span>
+  <!-- US Geometric Centroid (the "before" map) -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_access_map.html">
+    <span class="card-flag flag-standard">Choropleth</span>
     <div class="card-preview preview-us">
       <div class="preview-dots"></div>
       <div class="preview-label">United States</div>
       <div class="preview-bivar-swatch">
-        <div class="swatch" style="background:#f0e6c8"></div>
-        <div class="swatch" style="background:#e8b86d"></div>
-        <div class="swatch" style="background:#c87941"></div>
-        <div class="swatch" style="background:#9eb8d4"></div>
-        <div class="swatch" style="background:#7a94b8"></div>
-        <div class="swatch" style="background:#4a6fa0"></div>
-        <div class="swatch" style="background:#6b8f7a"></div>
-        <div class="swatch" style="background:#4a7060"></div>
-        <div class="swatch" style="background:#1e3a2f"></div>
+        <div class="swatch" style="background:#27b567"></div>
+        <div class="swatch" style="background:#d97706"></div>
+        <div class="swatch" style="background:#dc2626"></div>
       </div>
     </div>
     <div class="card-body">
       <div class="card-country">United States · 3,143 Counties</div>
-      <div class="card-title">Density × Drive Time Bivariate</div>
-      <div class="card-desc">Population density crossed with 90-minute PCI access. Reveals that dense + far is essentially nonexistent in the U.S.</div>
+      <div class="card-title">Geometric Centroids</div>
+      <div class="card-desc">Drive time measured from the mathematical midpoint of each county's land area. Overstates distance in large western counties — shown here to illustrate the distortion.</div>
       <div class="card-arrow">
         Open map
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -345,24 +339,22 @@
     </div>
   </a>
 
-  <!-- US Standard -->
-  <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_access_map.html">
+  <!-- US Population-Weighted Centroid (the "after" / correct map) -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_access_map_popweighted.html">
     <span class="card-flag flag-standard">Choropleth</span>
     <div class="card-preview preview-us">
       <div class="preview-dots"></div>
       <div class="preview-label">United States</div>
       <div class="preview-bivar-swatch">
-        <div class="swatch" style="background:#d4e8f0"></div>
-        <div class="swatch" style="background:#8bbdd4"></div>
-        <div class="swatch" style="background:#4a92b8"></div>
-        <div class="swatch" style="background:#2a6a94"></div>
-        <div class="swatch" style="background:#e05c2a"></div>
+        <div class="swatch" style="background:#27b567"></div>
+        <div class="swatch" style="background:#d97706"></div>
+        <div class="swatch" style="background:#dc2626"></div>
       </div>
     </div>
     <div class="card-body">
       <div class="card-country">United States · 3,143 Counties</div>
-      <div class="card-title">PCI Drive-Time Access</div>
-      <div class="card-desc">County-level drive time to nearest PCI-capable hospital, using CMS billing data and Census pop-weighted centroids.</div>
+      <div class="card-title">Population-Weighted Centroids</div>
+      <div class="card-desc">Drive time measured from where people actually live — Census 2020 population-weighted county centroids. The methodologically correct approach.</div>
       <div class="card-arrow">
         Open map
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -376,28 +368,22 @@
 
 <div class="grid">
 
-  <!-- Canada Bivariate -->
-  <a class="card" href="https://anishkoka.github.io/pci-access-maps/canada_pci_bivariate_map.html">
-    <span class="card-flag flag-bivariate">Bivariate</span>
+  <!-- Canada Geometric Centroid -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/canada_pci_access_map.html">
+    <span class="card-flag flag-standard">Choropleth</span>
     <div class="card-preview preview-canada">
       <div class="preview-dots"></div>
       <div class="preview-label">Canada</div>
       <div class="preview-bivar-swatch">
-        <div class="swatch" style="background:#f0e6c8"></div>
-        <div class="swatch" style="background:#e8b86d"></div>
-        <div class="swatch" style="background:#c87941"></div>
-        <div class="swatch" style="background:#9eb8d4"></div>
-        <div class="swatch" style="background:#7a94b8"></div>
-        <div class="swatch" style="background:#4a6fa0"></div>
-        <div class="swatch" style="background:#6b8f7a"></div>
-        <div class="swatch" style="background:#4a7060"></div>
-        <div class="swatch" style="background:#1e3a2f"></div>
+        <div class="swatch" style="background:#27b567"></div>
+        <div class="swatch" style="background:#d97706"></div>
+        <div class="swatch" style="background:#dc2626"></div>
       </div>
     </div>
     <div class="card-body">
       <div class="card-country">Canada · 282 Census Divisions</div>
-      <div class="card-title">Density × Drive Time Bivariate</div>
-      <div class="card-desc">Same methodology applied to Canada. 28.7% of Canadians live beyond 90 minutes of PCI — vs. 3.5% in the U.S.</div>
+      <div class="card-title">Geometric Centroids</div>
+      <div class="card-desc">Drive time from the geographic midpoint of each census division. Uses geometric centroids for all regions — the naive approach, shown for contrast.</div>
       <div class="card-arrow">
         Open map
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -405,24 +391,22 @@
     </div>
   </a>
 
-  <!-- Canada Standard -->
-  <a class="card" href="https://anishkoka.github.io/pci-access-maps/canada_pci_access_map.html">
+  <!-- Canada Population-Weighted Centroid -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/canada_pci_bivariate_map.html">
     <span class="card-flag flag-standard">Choropleth</span>
     <div class="card-preview preview-canada">
       <div class="preview-dots"></div>
       <div class="preview-label">Canada</div>
       <div class="preview-bivar-swatch">
-        <div class="swatch" style="background:#d4e8f0"></div>
-        <div class="swatch" style="background:#8bbdd4"></div>
-        <div class="swatch" style="background:#4a92b8"></div>
-        <div class="swatch" style="background:#2a6a94"></div>
-        <div class="swatch" style="background:#e05c2a"></div>
+        <div class="swatch" style="background:#27b567"></div>
+        <div class="swatch" style="background:#d97706"></div>
+        <div class="swatch" style="background:#dc2626"></div>
       </div>
     </div>
     <div class="card-body">
       <div class="card-country">Canada · 282 Census Divisions</div>
-      <div class="card-title">PCI Drive-Time Access</div>
-      <div class="card-desc">Census division–level drive time to nearest PCI center, using CIHI and provincial cardiac program directories.</div>
+      <div class="card-title">Population-Weighted Centroids</div>
+      <div class="card-desc">Drive time from population-weighted centroids for major urban census divisions. 28.7% of Canadians live beyond 90 minutes of PCI — vs. 3.5% in the U.S.</div>
       <div class="card-arrow">
         Open map
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
