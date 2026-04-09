@@ -196,6 +196,13 @@ Promise.all([
   loadText.textContent='Drawing tracts…';
 
   // Color each feature
+  // Debug: check a sample of IDs
+  const sampleFeature = tractFeatures.features[0];
+  console.log('Sample feature id:', sampleFeature.id, 'type:', typeof sampleFeature.id);
+  console.log('Padded:', String(sampleFeature.id).padStart(11,'0'));
+  console.log('In lookup?', !!lookup[String(sampleFeature.id).padStart(11,'0')]);
+  console.log('Lookup sample keys:', Object.keys(lookup).slice(0,3));
+
   const colorOf = d => {
     const geoid = String(d.id).padStart(11,'0');
     const dat = lookup[geoid];
