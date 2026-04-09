@@ -189,30 +189,28 @@ function setSize() {
 
 function drawTracts(filter) {
   tractCtx.clearRect(0, 0, W, H);
+  // Set context once on the path generator
+  const ctxPath = d3.geoPath().projection(projection).context(tractCtx);
   tractFeatures.features.forEach(f => {
     const geoid = String(f.id).padStart(11, '0');
     const dat = lookup[geoid];
     if (!dat || !f.geometry) return;
     const bivar = dat.bivar;
-    if (filter !== null && bivar !== filter) {
-      tractCtx.fillStyle = '#1a1f28';
-    } else {
-      tractCtx.fillStyle = BIVAR_COLORS[bivar];
-    }
+    tractCtx.fillStyle = (filter !== null && bivar !== filter) ? '#1a1f28' : BIVAR_COLORS[bivar];
     tractCtx.beginPath();
-    pathGen.context(tractCtx)(f);
+    ctxPath(f);
     tractCtx.fill();
   });
 }
 
 function drawBorders() {
   borderCtx.clearRect(0, 0, W, H);
-  // State borders
+  const ctxPath = d3.geoPath().projection(projection).context(borderCtx);
   borderCtx.strokeStyle = '#0d1117';
   borderCtx.lineWidth = 0.8;
   stateFeatures.features.forEach(f => {
     borderCtx.beginPath();
-    pathGen.context(borderCtx)(f);
+    ctxPath(f);
     borderCtx.stroke();
   });
 }
