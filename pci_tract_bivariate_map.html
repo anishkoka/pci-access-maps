@@ -193,16 +193,27 @@ function drawTracts(filter) {
   tractCtx.clearRect(0, 0, W, H);
   const ctxPath = d3.geoPath().projection(projection).context(tractCtx);
   const features = sortedFeatures || tractFeatures.features;
-  features.forEach(f => {
+  let colorCounts = {};
+  features.forEach((f, i) => {
     const geoid = String(f.id).padStart(11, '0');
     const dat = lookup[geoid];
     if (!dat || !f.geometry) return;
     const bivar = dat.bivar;
-    tractCtx.fillStyle = (filter !== null && bivar !== filter) ? '#1a1f28' : BIVAR_COLORS[bivar];
+    const color = (filter !== null && bivar !== filter) ? '#1a1f28' : BIVAR_COLORS[bivar];
+    colorCounts[color] = (colorCounts[color]||0)+1;
+    tractCtx.fillStyle = color;
     tractCtx.beginPath();
     ctxPath(f);
     tractCtx.fill();
   });
+  if (!drawTracts._logged) {
+    drawTracts._logged = true;
+    console.log('Color counts applied to canvas:', colorCounts);
+    // Check a specific orange tract
+    const orangeGeoid = '56029965800'; // Park County WY - large sparse tract
+    const d = lookup[orangeGeoid];
+    console.log('Park Co WY lookup:', d);
+  }
 }
 
 function drawBorders() {
@@ -281,32 +292,48 @@ Promise.all([
     const quadtree = d3.quadtree().x(d => d.x).y(d => d.y).addAll(centroidData);
 
     // Zoom & pan using transform on canvas
-    let transform = d3.zoomIdentity;
-    const zoom = d3.zoom().scaleExtent([1, 20]).on('zoom', e => {
-      transform = e.transform;
-      // Redraw with transform
-      projection = d3.geoAlbersUsa().fitSize([W, H], tractFeatures);
-      const scaled = projection;
-      // Apply zoom transform to projection
-      const t = e.transform;
-      const [tx, ty] = projection.translate();
-      const s = projection.scale();
-      projection.scale(s * t.k).translate([tx * t.k + t.x, ty * t.k + t.y]);
-      pathGen = d3.geoPath().projection(projection);
-      drawTracts(activeFilter);
-      drawBorders();
-      // Rebuild quadtree
-      centroidData.length = 0;
-      tractFeatures.features.forEach(f => {
-        const geoid = String(f.id).padStart(11, '0');
-        const dat = lookup[geoid];
-        if (!dat || !f.geometry) return;
-        const c = pathGen.centroid(f);
-        if (!isNaN(c[0]) && !isNaN(c[1])) centroidData.push({ x: c[0], y: c[1], geoid, dat });
+    // Zoom: use CSS transform on canvas elements for smooth pan/zoom
+    // Only redraw canvas content when zoom ends (not during pan)
+    let currentTransform = d3.zoomIdentity;
+    
+    const zoom = d3.zoom().scaleExtent([1, 20])
+      .on('zoom', e => {
+        currentTransform = e.transform;
+        // Apply CSS transform for smooth zoom/pan without redrawing
+        const t = e.transform;
+        tractCanvas.style.transformOrigin = '0 0';
+        tractCanvas.style.transform = `translate(${t.x}px,${t.y}px) scale(${t.k})`;
+        borderCanvas.style.transformOrigin = '0 0';
+        borderCanvas.style.transform = `translate(${t.x}px,${t.y}px) scale(${t.k})`;
+      })
+      .on('end', e => {
+        // On zoom end, redraw at full resolution with updated projection
+        const t = e.transform;
+        // Reset CSS transforms
+        tractCanvas.style.transform = '';
+        borderCanvas.style.transform = '';
+        // Update projection
+        const baseProj = d3.geoAlbersUsa().fitSize([W, H], tractFeatures);
+        const [tx, ty] = baseProj.translate();
+        const s = baseProj.scale();
+        projection = d3.geoAlbersUsa()
+          .scale(s * t.k)
+          .translate([tx * t.k + t.x, ty * t.k + t.y]);
+        pathGen = d3.geoPath().projection(projection);
+        drawTracts(activeFilter);
+        drawBorders();
+        // Rebuild quadtree
+        centroidData.length = 0;
+        tractFeatures.features.forEach(f => {
+          const geoid = String(f.id).padStart(11, '0');
+          const dat = lookup[geoid];
+          if (!dat || !f.geometry) return;
+          const c = pathGen.centroid(f);
+          if (!isNaN(c[0]) && !isNaN(c[1])) centroidData.push({ x: c[0], y: c[1], geoid, dat });
+        });
+        quadtree.removeAll(centroidData);
+        quadtree.addAll(centroidData);
       });
-      quadtree.removeAll(centroidData);
-      quadtree.addAll(centroidData);
-    });
 
     d3.select(tractCanvas).call(zoom);
 
@@ -314,9 +341,12 @@ Promise.all([
     const tt = document.getElementById('tooltip');
     tractCanvas.addEventListener('mousemove', e => {
       const rect = tractCanvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      const nearest = quadtree.find(mx, my, 30);
+      // Adjust for CSS transform scale
+      const scaleX = tractCanvas.width / rect.width;
+      const scaleY = tractCanvas.height / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+      const nearest = quadtree.find(mx, my, 30 * Math.max(scaleX, scaleY));
       if (!nearest) { tt.style.opacity = '0'; return; }
       const { geoid, dat } = nearest;
       document.getElementById('tt-name').textContent =
