@@ -187,11 +187,13 @@ function setSize() {
   borderCtx = borderCanvas.getContext('2d');
 }
 
+let sortedFeatures = null; // pre-sorted by area, large first
+
 function drawTracts(filter) {
   tractCtx.clearRect(0, 0, W, H);
-  // Set context once on the path generator
   const ctxPath = d3.geoPath().projection(projection).context(tractCtx);
-  tractFeatures.features.forEach(f => {
+  const features = sortedFeatures || tractFeatures.features;
+  features.forEach(f => {
     const geoid = String(f.id).padStart(11, '0');
     const dat = lookup[geoid];
     if (!dat || !f.geometry) return;
@@ -239,24 +241,28 @@ Promise.all([
   projection = d3.geoAlbersUsa().fitSize([W, H], tractFeatures);
   pathGen = d3.geoPath().projection(projection);
 
+  loadText.textContent = 'Sorting tracts…';
+
+  // Pre-sort features by geographic area (lon/lat bbox) - large tracts first
+  // so small urban tracts render on top and are visible
+  const geoPath0 = d3.geoPath(); // no projection - use raw lon/lat bbox
+  sortedFeatures = tractFeatures.features.slice().sort((a, b) => {
+    if (!a.geometry) return 1;
+    if (!b.geometry) return -1;
+    const ba = geoPath0.bounds(a);
+    const bb = geoPath0.bounds(b);
+    const areaA = (ba[1][0]-ba[0][0]) * (ba[1][1]-ba[0][1]);
+    const areaB = (bb[1][0]-bb[0][0]) * (bb[1][1]-bb[0][1]);
+    return areaB - areaA; // largest first
+  });
+
   loadText.textContent = 'Drawing 84,414 tracts…';
 
   // Draw in next frame so loading text shows
   requestAnimationFrame(() => {
     drawTracts(null);
     drawBorders();
-    // TEST: draw a visible red dot to confirm canvas is rendering
-    tractCtx.fillStyle = 'red';
-    tractCtx.fillRect(W/2-20, H/2-20, 40, 40);
-    console.log('Canvas W,H:', W, H);
-    console.log('Projection test - project [-100, 40]:', projection([-100, 40]));
-    // Check first tract path
-    const tf = tractFeatures.features[0];
-    console.log('First feature id:', tf.id, 'geometry type:', tf.geometry?.type);
-    const ctxPathTest = d3.geoPath().projection(projection).context(tractCtx);
-    // Get the SVG path string to see coordinates
-    const svgPath = d3.geoPath().projection(projection)(tf);
-    console.log('First tract SVG path (first 100):', svgPath ? svgPath.slice(0,100) : 'NULL/EMPTY');
+
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('tract-badge').style.display = 'block';
