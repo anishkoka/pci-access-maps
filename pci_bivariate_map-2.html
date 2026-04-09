@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCI Access — Bivariate Choropleth by Census Tract</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1e2a;
+    --surface: rgba(22, 26, 38, 0.94);
+    --surface2: rgba(30, 35, 50, 0.95);
+    --border: rgba(255,255,255,0.07);
+    --text: #dfe2ea;
+    --text-dim: #7c8298;
+    --text-bright: #fff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #map-container { flex: 1; position: relative; }
+  #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
+
+  /* ── Loading ── */
+  #loading {
+    position: absolute; inset: 0; z-index: 2000; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.5s;
+  }
+  #loading.hidden { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border); border-top-color: #6c8aec;
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  #load-status { font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Bottom panel ── */
+  #bottom-panel {
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    padding: 20px 32px;
+    display: none;
+    z-index: 1000;
+  }
+
+  .panel-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+  }
+
+  /* ── 3x3 Matrix Legend ── */
+  .matrix-section { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .matrix-header {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 10px;
+  }
+
+  .matrix-outer { display: flex; align-items: stretch; }
+
+  .matrix-ylabel {
+    writing-mode: vertical-lr; transform: rotate(180deg);
+    font-size: 9px; color: var(--text-dim); text-align: center;
+    margin-right: 6px; letter-spacing: 0.04em;
+  }
+
+  .matrix-row-labels {
+    display: flex; flex-direction: column; justify-content: space-around;
+    margin-right: 6px;
+  }
+  .matrix-row-label {
+    font-size: 10px; color: var(--text-dim); text-align: right;
+    font-weight: 500; line-height: 44px;
+  }
+
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 3px;
+  }
+
+  .matrix-cell {
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    border: 2px solid transparent;
+  }
+  .matrix-cell:hover, .matrix-cell.active {
+    transform: scale(1.12);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    z-index: 2;
+    border-color: #fff;
+  }
+  .matrix-cell.dimmed { opacity: 0.2; }
+
+  .matrix-col-labels {
+    display: grid; grid-template-columns: repeat(3, 44px); gap: 3px;
+    margin-top: 6px;
+  }
+  .matrix-col-label {
+    font-size: 10px; color: var(--text-dim); text-align: center;
+    font-weight: 500;
+  }
+
+  .matrix-axis {
+    display: flex; justify-content: center; margin-top: 4px;
+    font-size: 9px; color: var(--text-dim); letter-spacing: 0.03em;
+    width: 138px;
+  }
+
+  /* ── Category cards ── */
+  .categories { flex: 1; min-width: 0; }
+  .categories-header {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 12px;
+  }
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .cat-card {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .cat-card:hover, .cat-card.active {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .cat-swatch {
+    width: 20px; height: 20px; border-radius: 4px;
+    flex-shrink: 0; margin-top: 1px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .cat-info { flex: 1; min-width: 0; }
+  .cat-title { font-size: 12px; font-weight: 600; color: var(--text-bright); margin-bottom: 2px; }
+  .cat-desc { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+
+  /* ── Tooltip ── */
+  .tract-tooltip {
+    background: var(--surface) !important;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    padding: 14px 16px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+    color: var(--text) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 12px !important; line-height: 1.6 !important;
+  }
+  .tt-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .tt-row { display: flex; justify-content: space-between; gap: 20px; }
+  .tt-label { color: var(--text-dim); }
+  .tt-val { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .tt-badge {
+    display: inline-block; margin-top: 8px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 10px; font-weight: 600;
+  }
+
+  .leaflet-container { background: var(--bg) !important; }
+  .leaflet-control-zoom { border: 1px solid var(--border) !important; }
+  .leaflet-control-zoom a {
+    background: var(--surface) !important; color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  .leaflet-control-zoom a:hover { background: var(--surface2) !important; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <h2>Loading Census Tracts</h2>
+  <div id="load-status">Fetching data...</div>
+</div>
+
+<div id="map-container"><div id="map"></div></div>
+
+<div id="bottom-panel">
+  <div class="panel-inner">
+    <div class="matrix-section">
+      <div class="matrix-header">Hover any cell to highlight tracts</div>
+      <div class="matrix-outer">
+        <div class="matrix-ylabel">← Dense &nbsp; Population &nbsp; Sparse →</div>
+        <div class="matrix-row-labels">
+          <div class="matrix-row-label">Dense</div>
+          <div class="matrix-row-label">Moderate</div>
+          <div class="matrix-row-label">Sparse</div>
+        </div>
+        <div>
+          <div class="matrix-grid" id="matrix-grid"></div>
+          <div class="matrix-col-labels">
+            <div class="matrix-col-label">&gt;90 min</div>
+            <div class="matrix-col-label">30–90</div>
+            <div class="matrix-col-label">&lt;30 min</div>
+          </div>
+          <div class="matrix-axis">— Drive time to PCI →</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="categories">
+      <div class="categories-header">Key categories — hover to highlight</div>
+      <div class="cat-grid" id="cat-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Bivariate color matrix ──
+// Data encoding: c = densityClass * 3 + driveTimeClass
+//   densityClass: 0=Sparse, 1=Moderate, 2=Dense
+//   driveTimeClass: 0=<30min, 1=30-90min, 2=>90min
+//
+// Visual grid: rows Dense→Sparse top→bottom, cols >90→<30 left→right
+const COLORS = {
+  8: '#6b2c2e', // Dense + >90min
+  7: '#5b7baa', // Dense + 30-90min
+  6: '#3a9e6e', // Dense + <30min
+  5: '#d47e6a', // Moderate + >90min
+  4: '#c9b87a', // Moderate + 30-90min
+  3: '#7ec9a0', // Moderate + <30min
+  2: '#d4a8a0', // Sparse + >90min
+  1: '#d5cba0', // Sparse + 30-90min
+  0: '#a8ddc0', // Sparse + <30min
+};
+
+// Grid[row][col] → class id
+const GRID = [
+  [8, 7, 6],  // Dense:    >90, 30-90, <30
+  [5, 4, 3],  // Moderate: >90, 30-90, <30
+  [2, 1, 0],  // Sparse:   >90, 30-90, <30
+];
+
+const DENSITY_LABELS = ['Sparse', 'Moderate', 'Dense'];
+const TIME_LABELS = ['< 30 min', '30–90 min', '> 90 min'];
+
+const CATEGORIES = [
+  { c: 6, title: 'Dense + <30 min',     note: 'well within guideline' },
+  { c: 7, title: 'Dense + 30–90 min',   note: 'within ACC/AHA window' },
+  { c: 1, title: 'Sparse + 30–90 min',  note: 'within window, low density' },
+  { c: 2, title: 'Sparse + >90 min',    note: 'pharmaco-invasive territory' },
+  { c: 5, title: 'Moderate + >90 min',  note: 'the realistic policy target' },
+  { c: 8, title: 'Dense + >90 min',     note: 'critical gap if it exists' },
+];
+
+// ── Build matrix ──
+const matrixGrid = document.getElementById('matrix-grid');
+GRID.flat().forEach(classId => {
+  const cell = document.createElement('div');
+  cell.className = 'matrix-cell';
+  cell.style.background = COLORS[classId];
+  cell.dataset.classId = classId;
+  cell.addEventListener('mouseenter', () => highlightClass(classId));
+  cell.addEventListener('mouseleave', clearHighlight);
+  matrixGrid.appendChild(cell);
+});
+
+// ── Build category cards ──
+const catGrid = document.getElementById('cat-grid');
+CATEGORIES.forEach(cat => {
+  const card = document.createElement('div');
+  card.className = 'cat-card';
+  card.dataset.classId = cat.c;
+  card.innerHTML = `
+    <div class="cat-swatch" style="background:${COLORS[cat.c]}"></div>
+    <div class="cat-info">
+      <div class="cat-title">${cat.title}</div>
+      <div class="cat-desc" id="cat-desc-${cat.c}"></div>
+    </div>
+  `;
+  card.addEventListener('mouseenter', () => highlightClass(cat.c));
+  card.addEventListener('mouseleave', clearHighlight);
+  catGrid.appendChild(card);
+});
+
+// ── Map ──
+const map = L.map('map', {
+  center: [39.5, -98.5], zoom: 5,
+  zoomControl: true, preferCanvas: true, renderer: L.canvas(),
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+  maxZoom: 18, attribution: '&copy; OpenStreetMap &copy; CARTO',
+}).addTo(map);
+
+const lp = map.createPane('labels');
+lp.style.zIndex = 650; lp.style.pointerEvents = 'none';
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+  maxZoom: 18, pane: 'labels',
+}).addTo(map);
+
+let tractLayer = null;
+let activeClass = null;
+
+function featureStyle(feature) {
+  const c = feature.properties.c;
+  const z = map.getZoom();
+  const showBorder = z >= 9;
+  const on = activeClass === null || activeClass === c;
+  return {
+    fillColor: COLORS[c],
+    fillOpacity: on ? 0.78 : 0.06,
+    weight: showBorder ? (z >= 11 ? 0.8 : 0.3) : 0,
+    color: showBorder ? 'rgba(255,255,255,0.1)' : 'transparent',
+    opacity: on ? 1 : 0.05,
+  };
+}
+
+map.on('zoomend', () => { if (tractLayer) tractLayer.setStyle(featureStyle); });
+
+function highlightClass(id) {
+  activeClass = id;
+  if (tractLayer) tractLayer.setStyle(featureStyle);
+  document.querySelectorAll('.matrix-cell').forEach(el => {
+    const eid = parseInt(el.dataset.classId);
+    el.classList.toggle('active', eid === id);
+    el.classList.toggle('dimmed', eid !== id);
+  });
+  document.querySelectorAll('.cat-card').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.classId) === id);
+  });
+}
+
+function clearHighlight() {
+  activeClass = null;
+  if (tractLayer) tractLayer.setStyle(featureStyle);
+  document.querySelectorAll('.matrix-cell').forEach(el => el.classList.remove('active', 'dimmed'));
+  document.querySelectorAll('.cat-card').forEach(el => el.classList.remove('active'));
+}
+
+function fmtPop(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return String(n);
+}
+
+async function loadData() {
+  const statusEl = document.getElementById('load-status');
+  try {
+    statusEl.textContent = 'Downloading tract boundaries...';
+    const resp = await fetch('tracts_topo_bivar.json');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+    statusEl.textContent = 'Parsing TopoJSON...';
+    const topo = await resp.json();
+
+    statusEl.textContent = 'Converting geometries...';
+    await new Promise(r => setTimeout(r, 50));
+    const geojson = topojson.feature(topo, topo.objects.tracts);
+
+    statusEl.textContent = `Rendering ${geojson.features.length.toLocaleString()} tracts...`;
+    await new Promise(r => setTimeout(r, 50));
+
+    // Stats per class
+    const counts = {}, pops = {};
+    for (let i = 0; i < 9; i++) { counts[i] = 0; pops[i] = 0; }
+    geojson.features.forEach(f => {
+      counts[f.properties.c]++;
+      pops[f.properties.c] += f.properties.p || 0;
+    });
+
+    // Fill category descriptions
+    CATEGORIES.forEach(cat => {
+      const el = document.getElementById(`cat-desc-${cat.c}`);
+      if (el) {
+        const cnt = counts[cat.c];
+        const pop = pops[cat.c];
+        el.textContent = `${fmtPop(pop)} people, ${cnt.toLocaleString()} tracts — ${cat.note}`;
+      }
+    });
+
+    tractLayer = L.geoJSON(geojson, {
+      renderer: L.canvas({ padding: 0.5 }),
+      style: featureStyle,
+      interactive: true,
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties;
+        const dc = Math.floor(p.c / 3);
+        const tc = p.c % 3;
+
+        layer.bindTooltip(`
+          <div class="tt-title">Tract ${p.g}</div>
+          <div class="tt-row"><span class="tt-label">Population</span><span class="tt-val">${(p.p||0).toLocaleString()}</span></div>
+          <div class="tt-row"><span class="tt-label">Density</span><span class="tt-val">${(p.n||0).toLocaleString()} / sq mi</span></div>
+          <div class="tt-row"><span class="tt-label">Nearest PCI</span><span class="tt-val">${p.h}</span></div>
+          <div class="tt-row"><span class="tt-label">Distance</span><span class="tt-val">${p.d} mi</span></div>
+          <div class="tt-row"><span class="tt-label">Est. Drive</span><span class="tt-val">${p.t} min</span></div>
+          <div><span class="tt-badge" style="background:${COLORS[p.c]};color:#fff">${DENSITY_LABELS[dc]} · ${TIME_LABELS[tc]}</span></div>
+        `, { className: 'tract-tooltip', sticky: true, direction: 'top', offset: [0, -10] });
+
+        layer.on('mouseover', function() {
+          this.setStyle({ weight: 1.5, color: '#fff', fillOpacity: 0.95 });
+          this.bringToFront();
+        });
+        layer.on('mouseout', function() { tractLayer.resetStyle(this); });
+      },
+    }).addTo(map);
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('bottom-panel').style.display = '';
+
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    console.error(err);
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
