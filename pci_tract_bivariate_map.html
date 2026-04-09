@@ -8,162 +8,101 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg:      #0d1117;
-    --surface: #161b22;
-    --border:  #21262d;
-    --text:    #e6edf3;
-    --muted:   #6e7681;
-    --accent:  #58a6ff;
+    --bg:#0d1117; --surface:#161b22; --border:#21262d;
+    --text:#e6edf3; --muted:#6e7681; --accent:#58a6ff;
     --c0:#c8dbd5; --c1:#d5cfc0; --c2:#d9c5b5;
     --c3:#5aaa85; --c4:#b8a882; --c5:#c97a6a;
     --c6:#1a6e3c; --c7:#4a7da8; --c8:#8b1a1a;
   }
-
-  html, body { width:100%; height:100%; background:var(--bg); color:var(--text);
-    font-family:'DM Sans',sans-serif; font-size:14px; line-height:1.5; overflow:hidden; }
-
-  #app { display:grid; grid-template-columns:300px 1fr; height:100vh; }
-
-  /* sidebar */
-  #sidebar {
-    background:var(--surface); border-right:1px solid var(--border);
-    display:flex; flex-direction:column; overflow-y:auto;
-    padding:24px 20px; gap:20px; z-index:10;
-  }
-  #sidebar h1 { font-family:'DM Serif Display',serif; font-size:22px; line-height:1.2; }
-  #sidebar h1 em { font-style:italic; color:#a8d5b5; }
-  .subtitle { font-size:12px; color:var(--muted); line-height:1.6; margin-top:8px; }
-  .section-label {
-    font-size:10px; font-weight:600; letter-spacing:.12em;
-    text-transform:uppercase; color:var(--muted); margin-bottom:8px;
-  }
-
-  /* legend */
-  .legend-row { display:flex; align-items:center; margin-bottom:3px; }
-  .legend-row-label { width:68px; font-size:10px; color:var(--muted); text-align:right; padding-right:8px; flex-shrink:0; }
-  .bivar-cell { width:44px; height:30px; cursor:pointer; border:1px solid rgba(0,0,0,.2);
-    transition:transform .1s,box-shadow .1s; }
-  .bivar-cell:hover, .bivar-cell.active {
-    transform:scale(1.08); box-shadow:0 0 0 2px #fff4; z-index:2; position:relative; }
-  .legend-axis-x { display:flex; margin-left:68px; padding-left:8px; margin-top:4px; }
-  .legend-axis-x span { width:44px; font-size:9px; color:var(--muted); text-align:center; }
-  .legend-axis-label { font-size:9px; color:var(--muted); margin-left:76px; margin-top:2px; }
-
-  /* callouts */
-  .callout {
-    border:1px solid var(--border); border-radius:6px; padding:10px 12px;
-    cursor:pointer; transition:border-color .15s,background .15s;
-  }
-  .callout:hover, .callout.active { border-color:#ffffff44; background:#ffffff08; }
-  .callout-dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
-  .callout-title { font-size:12px; font-weight:500; display:flex; align-items:center; margin-bottom:3px; }
-  .callout-stat { font-size:20px; font-family:'DM Serif Display',serif; line-height:1; margin-bottom:2px; }
-  .callout-desc { font-size:11px; color:var(--muted); line-height:1.4; }
-
-  .method-note { font-size:10px; color:var(--muted); line-height:1.6; border-top:1px solid var(--border); padding-top:12px; }
-
-  /* map */
-  #map-wrap { position:relative; overflow:hidden; background:var(--bg); }
-  #map-svg { width:100%; height:100%; display:block; }
-
-  #loading {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; background:var(--bg); gap:16px; z-index:20;
-  }
-  #loading-text { font-size:13px; color:var(--muted); }
-  .spinner { width:32px; height:32px; border:2px solid var(--border);
-    border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-
-  /* tooltip */
-  #tooltip {
-    position:fixed; pointer-events:none; background:#1c2128ee;
-    border:1px solid var(--border); border-radius:8px; padding:10px 14px;
-    font-size:12px; opacity:0; transition:opacity .1s; max-width:260px; z-index:100;
-    backdrop-filter:blur(8px);
-  }
-  #tt-name { font-weight:600; font-size:13px; margin-bottom:6px; }
-  .tt-row { display:flex; justify-content:space-between; gap:16px; margin-top:2px; }
-  .tt-label { color:var(--muted); }
-  #tt-badge { display:inline-block; margin-top:6px; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:.04em; }
-
-  #scale-bar {
-    position:absolute; bottom:20px; right:20px; background:#161b22cc;
-    border:1px solid var(--border); border-radius:6px; padding:8px 12px;
-    font-size:10px; color:var(--muted);
-  }
-  #tract-badge {
-    position:absolute; top:16px; right:16px; background:#161b22cc;
-    border:1px solid var(--border); border-radius:6px; padding:6px 10px;
-    font-size:10px; color:var(--muted); backdrop-filter:blur(4px); display:none;
-  }
-  #tract-badge strong { color:var(--text); }
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--text);
+    font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;overflow:hidden;}
+  #app{display:grid;grid-template-columns:300px 1fr;height:100vh;}
+  #sidebar{background:var(--surface);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow-y:auto;padding:24px 20px;gap:20px;z-index:10;}
+  #sidebar h1{font-family:'DM Serif Display',serif;font-size:22px;line-height:1.2;}
+  #sidebar h1 em{font-style:italic;color:#a8d5b5;}
+  .subtitle{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
+  .section-label{font-size:10px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .legend-row{display:flex;align-items:center;margin-bottom:3px;}
+  .legend-row-label{width:68px;font-size:10px;color:var(--muted);text-align:right;padding-right:8px;flex-shrink:0;}
+  .bivar-cell{width:44px;height:30px;cursor:pointer;border:1px solid rgba(0,0,0,.2);
+    transition:transform .1s,box-shadow .1s;}
+  .bivar-cell:hover,.bivar-cell.active{transform:scale(1.08);box-shadow:0 0 0 2px #fff4;z-index:2;position:relative;}
+  .legend-axis-x{display:flex;margin-left:68px;padding-left:8px;margin-top:4px;}
+  .legend-axis-x span{width:44px;font-size:9px;color:var(--muted);text-align:center;}
+  .legend-axis-label{font-size:9px;color:var(--muted);margin-left:76px;margin-top:2px;}
+  .callout{border:1px solid var(--border);border-radius:6px;padding:10px 12px;
+    cursor:pointer;transition:border-color .15s,background .15s;}
+  .callout:hover,.callout.active{border-color:#ffffff44;background:#ffffff08;}
+  .callout-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+  .callout-title{font-size:12px;font-weight:500;display:flex;align-items:center;margin-bottom:3px;}
+  .callout-stat{font-size:20px;font-family:'DM Serif Display',serif;line-height:1;margin-bottom:2px;}
+  .callout-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+  .method-note{font-size:10px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:12px;}
+  #map-wrap{position:relative;overflow:hidden;background:var(--bg);}
+  #map-svg{width:100%;height:100%;display:block;}
+  #loading{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;background:var(--bg);gap:16px;z-index:20;}
+  #loading-text{font-size:13px;color:var(--muted);}
+  .spinner{width:32px;height:32px;border:2px solid var(--border);
+    border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #tooltip{position:fixed;pointer-events:none;background:#1c2128ee;
+    border:1px solid var(--border);border-radius:8px;padding:10px 14px;
+    font-size:12px;opacity:0;transition:opacity .1s;max-width:260px;z-index:100;backdrop-filter:blur(8px);}
+  #tt-name{font-weight:600;font-size:13px;margin-bottom:6px;}
+  .tt-row{display:flex;justify-content:space-between;gap:16px;margin-top:2px;}
+  .tt-label{color:var(--muted);}
+  #tt-badge{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.04em;}
+  #scale-bar{position:absolute;bottom:20px;right:20px;background:#161b22cc;
+    border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:10px;color:var(--muted);}
+  #tract-badge{position:absolute;top:16px;right:16px;background:#161b22cc;
+    border:1px solid var(--border);border-radius:6px;padding:6px 10px;
+    font-size:10px;color:var(--muted);backdrop-filter:blur(4px);display:none;}
+  #tract-badge strong{color:var(--text);}
 </style>
 </head>
 <body>
 <div id="app">
-
   <aside id="sidebar">
     <div>
       <h1>Who <em>Really</em> Lacks<br>Access to a Cath Lab?</h1>
-      <p class="subtitle">
-        PCI access at the census-tract level — 84,414 tracts classified by
-        population density and estimated drive time to the nearest PCI-capable hospital.
-      </p>
+      <p class="subtitle">PCI access at the census-tract level — 84,414 tracts classified by
+        population density and estimated drive time to the nearest PCI-capable hospital.</p>
     </div>
-
     <div>
       <div class="section-label">Density × Drive Time</div>
       <div id="legend-wrap"></div>
       <div class="legend-axis-x" id="axis-x"></div>
       <div class="legend-axis-label">← Drive time to nearest cath lab</div>
     </div>
-
     <div>
       <div class="section-label">Key Groups</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-
         <div class="callout" data-bivar="2">
-          <div class="callout-title">
-            <span class="callout-dot" style="background:var(--c2)"></span>
-            Sparse + &gt;90 min away
-          </div>
+          <div class="callout-title"><span class="callout-dot" style="background:var(--c2)"></span>Sparse + &gt;90 min away</div>
           <div class="callout-stat">7.7M people</div>
           <div class="callout-desc">Rural Americans more than 90 drive minutes from a PCI hospital — the most access-deprived group.</div>
         </div>
-
         <div class="callout" data-bivar="1">
-          <div class="callout-title">
-            <span class="callout-dot" style="background:var(--c1)"></span>
-            Sparse + 30–90 min away
-          </div>
+          <div class="callout-title"><span class="callout-dot" style="background:var(--c1)"></span>Sparse + 30–90 min away</div>
           <div class="callout-stat">40.1M people</div>
           <div class="callout-desc">Rural residents with moderate drive times — reachable but still far from urban cardiac care.</div>
         </div>
-
         <div class="callout" data-bivar="4">
-          <div class="callout-title">
-            <span class="callout-dot" style="background:var(--c4)"></span>
-            Moderate density + 30–90 min
-          </div>
+          <div class="callout-title"><span class="callout-dot" style="background:var(--c4)"></span>Moderate density + 30–90 min</div>
           <div class="callout-stat">7.6M people</div>
           <div class="callout-desc">Suburban and small-city residents with meaningful access gaps often missed in rural-only analyses.</div>
         </div>
-
         <div class="callout" data-bivar="5">
-          <div class="callout-title">
-            <span class="callout-dot" style="background:var(--c5)"></span>
-            Moderate density + &gt;90 min
-          </div>
+          <div class="callout-title"><span class="callout-dot" style="background:var(--c5)"></span>Moderate density + &gt;90 min</div>
           <div class="callout-stat">1.6M people</div>
           <div class="callout-desc">Mid-density communities severely underserved — smaller cities and towns far from any cath lab.</div>
         </div>
-
       </div>
     </div>
-
     <div class="method-note">
       <strong style="color:var(--text)">Method</strong><br>
       Drive time: 2020 Census tract population centers → 1,248 PCI hospitals,
@@ -172,7 +111,6 @@
       Thresholds: &lt;965 · 965–4,199 · &gt;4,199 people/sq mi.
     </div>
   </aside>
-
   <main id="map-wrap">
     <div id="loading">
       <div class="spinner"></div>
@@ -183,7 +121,6 @@
     <div id="scale-bar">Census tracts · 2020 · 1,248 PCI hospitals</div>
   </main>
 </div>
-
 <div id="tooltip">
   <div id="tt-name">—</div>
   <div class="tt-row"><span class="tt-label">Population</span><span class="tt-val" id="tt-pop">—</span></div>
@@ -193,229 +130,175 @@
   <div class="tt-row"><span class="tt-label">Nearest hospital</span><span class="tt-val" id="tt-hosp" style="max-width:150px;text-align:right;font-size:11px">—</span></div>
   <div><span id="tt-badge">—</span></div>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
-const BIVAR_COLORS = [
-  '#c8dbd5','#d5cfc0','#d9c5b5',
-  '#5aaa85','#b8a882','#c97a6a',
-  '#1a6e3c','#4a7da8','#8b1a1a',
-];
-const BIVAR_LABELS = [
-  'Sparse + <30 min','Sparse + 30–90 min','Sparse + >90 min',
+const BIVAR_COLORS=['#c8dbd5','#d5cfc0','#d9c5b5','#5aaa85','#b8a882','#c97a6a','#1a6e3c','#4a7da8','#8b1a1a'];
+const BIVAR_LABELS=['Sparse + <30 min','Sparse + 30–90 min','Sparse + >90 min',
   'Moderate + <30 min','Moderate + 30–90 min','Moderate + >90 min',
-  'Dense + <30 min','Dense + 30–90 min','Dense + >90 min',
-];
-const DARK_BIVAR = new Set([3,5,6,7,8]);
+  'Dense + <30 min','Dense + 30–90 min','Dense + >90 min'];
+const DARK_BIVAR=new Set([3,5,6,7,8]);
 
-// Build legend grid
-const legendWrap = document.getElementById('legend-wrap');
-['Dense','Moderate','Sparse'].forEach((densLabel, di) => {
-  const d = 2 - di; // dense=2, moderate=1, sparse=0
-  const row = document.createElement('div');
-  row.className = 'legend-row';
-  const lbl = document.createElement('div');
-  lbl.className = 'legend-row-label';
-  lbl.textContent = densLabel;
+// Legend
+const legendWrap=document.getElementById('legend-wrap');
+['Dense','Moderate','Sparse'].forEach((densLabel,di)=>{
+  const d=2-di;
+  const row=document.createElement('div'); row.className='legend-row';
+  const lbl=document.createElement('div'); lbl.className='legend-row-label'; lbl.textContent=densLabel;
   row.appendChild(lbl);
-  // columns: >90, 30-90, <30  (acc=2,1,0 visually left to right = worst to best)
-  [2,1,0].forEach(acc => {
-    const bivar = acc + d * 3;
-    const cell = document.createElement('div');
-    cell.className = 'bivar-cell';
-    cell.style.background = BIVAR_COLORS[bivar];
-    cell.dataset.bivar = String(bivar);
-    cell.title = BIVAR_LABELS[bivar];
-    row.appendChild(cell);
+  [2,1,0].forEach(acc=>{
+    const bivar=acc+d*3;
+    const cell=document.createElement('div'); cell.className='bivar-cell';
+    cell.style.background=BIVAR_COLORS[bivar]; cell.dataset.bivar=String(bivar);
+    cell.title=BIVAR_LABELS[bivar]; row.appendChild(cell);
   });
   legendWrap.appendChild(row);
 });
-const axisX = document.getElementById('axis-x');
-['>90 min','30–90 min','<30 min'].forEach(l => {
-  const s = document.createElement('span'); s.textContent = l; axisX.appendChild(s);
+const axisX=document.getElementById('axis-x');
+['>90 min','30–90 min','<30 min'].forEach(l=>{
+  const s=document.createElement('span'); s.textContent=l; axisX.appendChild(s);
 });
 
-// Map
-const svg = d3.select('#map-svg');
-const mapWrap = document.getElementById('map-wrap');
-const g = svg.append('g');
-const gTracts = g.append('g');
-const gStates  = g.append('g');
+const svg=d3.select('#map-svg');
+const mapWrap=document.getElementById('map-wrap');
+const g=svg.append('g');
+const gTracts=g.append('g');
+const gStates=g.append('g');
 
-// We use a null projection because our tract TopoJSON is in lon/lat
-// and state borders from us-atlas are in Albers screen coords (960x600)
-// Strategy: project tracts via geoAlbersUsa, scale states to match viewport
-const tractProj = d3.geoAlbersUsa();
-const tractPath = d3.geoPath().projection(tractProj);
-
-// State borders use the us-atlas Albers projection (960x600 base)
-const STATE_W = 960, STATE_H = 600;
-const stateProj = d3.geoAlbersUsa().scale(1280).translate([480, 300]);
-const statePath = d3.geoPath().projection(stateProj);
-
-function resizeMap() {
-  const W = mapWrap.clientWidth;
-  const H = mapWrap.clientHeight;
-  // Fit tract projection to viewport
-  tractProj.scale(1).translate([0,0]);
-  tractProj.scale(Math.min(W * 1.25, H * 2.05)).translate([W/2, H/2]);
-  tractPath.projection(tractProj);
-  // Scale state overlay
-  const sx = W / STATE_W, sy = H / STATE_H;
-  gStates.attr('transform', `scale(${sx},${sy})`);
-  gStates.selectAll('path').attr('stroke-width', 1.2 / Math.min(sx,sy));
-}
-resizeMap();
-
-const loadText = document.getElementById('loading-text');
+const loadText=document.getElementById('loading-text');
 
 Promise.all([
-  fetch('tracts-lonlat.json').then(r => {
-    if (!r.ok) throw new Error('Missing tracts-lonlat.json — place all files in the same folder.');
+  fetch('tracts-lonlat.json').then(r=>{
+    if(!r.ok) throw new Error('Missing tracts-lonlat.json');
+    loadText.textContent='Loading bivariate data…';
     return r.json();
   }),
-  fetch('tract_bivar_data.json').then(r => {
-    if (!r.ok) throw new Error('Missing tract_bivar_data.json');
+  fetch('tract_bivar_data.json').then(r=>{
+    if(!r.ok) throw new Error('Missing tract_bivar_data.json');
     return r.json();
   }),
-  fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-albers-10m.json').then(r => r.json()),
+  fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(r=>r.json()),
 ])
-.then(([tractTopo, bdata, stateTopo]) => {
-  loadText.textContent = 'Building lookup…';
+.then(([tractTopo, bdata, stateTopo])=>{
+  loadText.textContent='Rendering…';
 
-  // Compact lookup by GEOID
-  const lookup = Object.create(null);
-  for (let i = 0; i < bdata.geoids.length; i++) {
-    lookup[bdata.geoids[i]] = {
-      bivar:    bdata.bivar[i],
-      pop:      bdata.pop[i],
-      density:  bdata.density[i],
-      miles:    bdata.miles[i],
-      drive_min:bdata.drive_min[i],
-      band:     bdata.band[i],
-      hospital: bdata.hospital[i],
+  // Build lookup
+  const lookup=Object.create(null);
+  for(let i=0;i<bdata.geoids.length;i++){
+    lookup[bdata.geoids[i]]={
+      bivar:bdata.bivar[i], pop:bdata.pop[i], density:bdata.density[i],
+      miles:bdata.miles[i], drive_min:bdata.drive_min[i], hospital:bdata.hospital[i]
     };
   }
 
-  loadText.textContent = 'Drawing 84,414 tracts…';
+  // Extract features
+  const objName=Object.keys(tractTopo.objects)[0];
+  const tractFeatures=topojson.feature(tractTopo,tractTopo.objects[objName]);
+  const stateFeatures=topojson.feature(stateTopo,stateTopo.objects.states);
 
-  // Tract features
-  const objName = Object.keys(tractTopo.objects)[0];
-  const tractFeatures = topojson.feature(tractTopo, tractTopo.objects[objName]);
+  // Fit projection to tract features and viewport
+  const W=mapWrap.clientWidth, H=mapWrap.clientHeight;
+  const projection=d3.geoAlbersUsa().fitSize([W,H],tractFeatures);
+  const path=d3.geoPath().projection(projection);
 
-  const tractPaths = gTracts.selectAll('path')
+  // Draw tracts
+  const tractPaths=gTracts.selectAll('path')
     .data(tractFeatures.features)
     .join('path')
-      .attr('d', tractPath)
-      .attr('fill', d => {
-        const dat = lookup[d.id];
-        return dat ? BIVAR_COLORS[dat.bivar] : '#1c2128';
+      .attr('d',path)
+      .attr('fill',d=>{
+        const dat=lookup[d.id];
+        return dat?BIVAR_COLORS[dat.bivar]:'#1c2128';
       })
-      .attr('stroke', '#0d1117')
-      .attr('stroke-width', 0.1)
-      .on('mousemove', function(event, d) {
-        const dat = lookup[d.id];
-        if (!dat) return;
-        const geoid = String(d.id);
-        document.getElementById('tt-name').textContent =
+      .attr('stroke','#0d1117')
+      .attr('stroke-width',0.1)
+      .on('mousemove',function(event,d){
+        const dat=lookup[d.id]; if(!dat) return;
+        const geoid=String(d.id);
+        document.getElementById('tt-name').textContent=
           `Tract ${parseInt(geoid.slice(5))/100} · ${geoid.slice(0,2)}-${geoid.slice(2,5)}`;
-        document.getElementById('tt-pop').textContent   = dat.pop.toLocaleString();
-        document.getElementById('tt-dens').textContent  = dat.density.toLocaleString() + ' / sq mi';
-        document.getElementById('tt-drive').textContent = dat.drive_min + ' min';
-        document.getElementById('tt-miles').textContent = dat.miles + ' mi';
-        document.getElementById('tt-hosp').textContent  = dat.hospital;
-        const badge = document.getElementById('tt-badge');
-        badge.textContent = BIVAR_LABELS[dat.bivar];
-        badge.style.background = BIVAR_COLORS[dat.bivar];
-        badge.style.color = DARK_BIVAR.has(dat.bivar) ? '#fff' : '#111';
-        const tt = document.getElementById('tooltip');
-        tt.style.opacity = '1';
-        const x = event.clientX + 16;
-        const ttW = tt.offsetWidth || 260;
-        tt.style.left = (x + ttW > window.innerWidth ? event.clientX - ttW - 10 : x) + 'px';
-        tt.style.top  = (event.clientY - 10) + 'px';
+        document.getElementById('tt-pop').textContent=dat.pop.toLocaleString();
+        document.getElementById('tt-dens').textContent=dat.density.toLocaleString()+' / sq mi';
+        document.getElementById('tt-drive').textContent=dat.drive_min+' min';
+        document.getElementById('tt-miles').textContent=dat.miles+' mi';
+        document.getElementById('tt-hosp').textContent=dat.hospital;
+        const badge=document.getElementById('tt-badge');
+        badge.textContent=BIVAR_LABELS[dat.bivar];
+        badge.style.background=BIVAR_COLORS[dat.bivar];
+        badge.style.color=DARK_BIVAR.has(dat.bivar)?'#fff':'#111';
+        const tt=document.getElementById('tooltip');
+        tt.style.opacity='1';
+        const x=event.clientX+16, ttW=tt.offsetWidth||260;
+        tt.style.left=(x+ttW>window.innerWidth?event.clientX-ttW-10:x)+'px';
+        tt.style.top=(event.clientY-10)+'px';
       })
-      .on('mouseleave', () => document.getElementById('tooltip').style.opacity = '0');
+      .on('mouseleave',()=>document.getElementById('tooltip').style.opacity='0');
 
-  // State borders
-  const stateFeatures = topojson.feature(stateTopo, stateTopo.objects.states);
+  // State borders — same projection (states-10m is lon/lat)
   gStates.selectAll('path')
     .data(stateFeatures.features)
     .join('path')
-      .attr('d', statePath)
-      .attr('fill', 'none')
-      .attr('stroke', '#0d1117')
-      .attr('stroke-width', 1.2);
+      .attr('d',path)
+      .attr('fill','none')
+      .attr('stroke','#0d1117')
+      .attr('stroke-width',0.8);
 
-  // Hide loader
-  document.getElementById('loading').style.display = 'none';
-  const badge = document.getElementById('tract-badge');
-  badge.style.display = 'block';
+  document.getElementById('loading').style.display='none';
+  document.getElementById('tract-badge').style.display='block';
 
   // Highlight logic
-  function highlightBivar(bivar) {
-    tractPaths.each(function(d) {
-      const dat = lookup[d.id];
-      if (!dat) return;
-      if (bivar === null) {
-        this.setAttribute('fill', BIVAR_COLORS[dat.bivar]);
-        this.setAttribute('opacity', '1');
-      } else if (dat.bivar === bivar) {
-        this.setAttribute('fill', BIVAR_COLORS[dat.bivar]);
-        this.setAttribute('opacity', '1');
+  function highlightBivar(bivar){
+    tractPaths.each(function(d){
+      const dat=lookup[d.id]; if(!dat) return;
+      if(bivar===null){
+        this.setAttribute('fill',BIVAR_COLORS[dat.bivar]);
+        this.setAttribute('opacity','1');
+      } else if(dat.bivar===bivar){
+        this.setAttribute('fill',BIVAR_COLORS[dat.bivar]);
+        this.setAttribute('opacity','1');
       } else {
-        this.setAttribute('fill', '#161b22');
-        this.setAttribute('opacity', '0.35');
+        this.setAttribute('fill','#161b22');
+        this.setAttribute('opacity','0.35');
       }
     });
-    if (bivar === null) {
-      document.getElementById('tc-num').textContent = '84,414';
-    } else {
-      let n = 0;
-      tractPaths.each(d => { if (lookup[d.id]?.bivar === bivar) n++; });
-      document.getElementById('tc-num').textContent = n.toLocaleString();
-    }
+    let n=0;
+    if(bivar!==null) tractPaths.each(d=>{if(lookup[d.id]?.bivar===bivar)n++;});
+    document.getElementById('tc-num').textContent=bivar===null?'84,414':n.toLocaleString();
   }
 
-  function clearAll() {
+  function clearAll(){
     highlightBivar(null);
     document.querySelectorAll('.bivar-cell.active,.callout.active')
-      .forEach(el => el.classList.remove('active'));
+      .forEach(el=>el.classList.remove('active'));
   }
-  function activateBivar(bivar) {
+  function activateBivar(bivar){
     highlightBivar(bivar);
     document.querySelectorAll(`[data-bivar="${bivar}"]`)
-      .forEach(el => el.classList.add('active'));
+      .forEach(el=>el.classList.add('active'));
   }
 
-  document.querySelectorAll('.bivar-cell').forEach(el => {
-    el.addEventListener('mouseenter', () => activateBivar(+el.dataset.bivar));
-    el.addEventListener('mouseleave', clearAll);
+  document.querySelectorAll('.bivar-cell').forEach(el=>{
+    el.addEventListener('mouseenter',()=>activateBivar(+el.dataset.bivar));
+    el.addEventListener('mouseleave',clearAll);
   });
-  document.querySelectorAll('.callout[data-bivar]').forEach(el => {
-    el.addEventListener('mouseenter', () => activateBivar(+el.dataset.bivar));
-    el.addEventListener('mouseleave', clearAll);
+  document.querySelectorAll('.callout[data-bivar]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>activateBivar(+el.dataset.bivar));
+    el.addEventListener('mouseleave',clearAll);
   });
 
   // Zoom & pan
-  const zoom = d3.zoom()
-    .scaleExtent([1, 18])
-    .on('zoom', e => g.attr('transform', e.transform));
-  svg.call(zoom);
+  svg.call(d3.zoom().scaleExtent([1,20]).on('zoom',e=>g.attr('transform',e.transform)));
 
-  // Resize handler
-  window.addEventListener('resize', () => {
-    resizeMap();
-    tractPaths.attr('d', tractPath);
-    const W = mapWrap.clientWidth, H = mapWrap.clientHeight;
-    const sx = W / STATE_W, sy = H / STATE_H;
-    gStates.attr('transform', `scale(${sx},${sy})`);
-    gStates.selectAll('path').attr('stroke-width', 1.2 / Math.min(sx,sy));
+  // Resize
+  window.addEventListener('resize',()=>{
+    const W=mapWrap.clientWidth, H=mapWrap.clientHeight;
+    projection.fitSize([W,H],tractFeatures);
+    tractPaths.attr('d',path);
+    gStates.selectAll('path').attr('d',path);
   });
 })
-.catch(err => {
-  document.getElementById('loading-text').textContent = '⚠ ' + err.message;
+.catch(err=>{
+  document.getElementById('loading-text').textContent='⚠ '+err.message;
   console.error(err);
 });
 </script>
