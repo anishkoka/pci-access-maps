@@ -272,14 +272,22 @@ function featureStyle(feature) {
   const t = feature.properties.t;
   const b = getBreak(t);
   const show = !desertMode || t > 60;
+  const z = map.getZoom();
+  // No borders below zoom 9 — they create black mesh on dense tracts
+  const showBorder = z >= 9;
   return {
     fillColor: b.color,
-    fillOpacity: show ? 0.75 : 0.05,
-    weight: 0.3,
-    color: 'rgba(255,255,255,0.08)',
+    fillOpacity: show ? 0.8 : 0.05,
+    weight: showBorder ? (z >= 11 ? 0.8 : 0.4) : 0,
+    color: showBorder ? 'rgba(255,255,255,0.12)' : 'transparent',
     opacity: show ? 1 : 0.02,
   };
 }
+
+// Re-style on zoom to toggle borders
+map.on('zoomend', function() {
+  if (tractLayer) tractLayer.setStyle(featureStyle);
+});
 
 function onEachTract(feature, layer) {
   const p = feature.properties;
