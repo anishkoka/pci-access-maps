@@ -3,67 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PCI Access vs Population Density — U.S. Census Tracts</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>PCI Access — U.S. Census Tracts</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  :root {
-    --bg:#0d1117; --surface:#161b22; --border:#21262d;
-    --text:#e6edf3; --muted:#6e7681; --accent:#58a6ff;
-    --c0:#e8e8e8; --c1:#f0c282; --c2:#d4541a;
-    --c3:#9ac8e2; --c4:#b58fb0; --c5:#8b2252;
-    --c6:#3a7cb8; --c7:#5a4a8a; --c8:#2d1429;
-  }
-  html,body { width:100%; height:100%; background:var(--bg); color:var(--text);
-    font-family:'DM Sans',sans-serif; font-size:14px; line-height:1.5; overflow:hidden; }
-  #app { display:grid; grid-template-columns:300px 1fr; height:100vh; }
-  #sidebar { background:var(--surface); border-right:1px solid var(--border);
-    display:flex; flex-direction:column; overflow-y:auto; padding:24px 20px; gap:20px; z-index:10; }
-  #sidebar h1 { font-family:'DM Serif Display',serif; font-size:22px; line-height:1.2; }
-  #sidebar h1 em { font-style:italic; color:#a8d5b5; }
-  .subtitle { font-size:12px; color:var(--muted); line-height:1.6; margin-top:8px; }
-  .section-label { font-size:10px; font-weight:600; letter-spacing:.12em;
-    text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-  .legend-row { display:flex; align-items:center; margin-bottom:3px; }
-  .legend-row-label { width:68px; font-size:10px; color:var(--muted); text-align:right; padding-right:8px; flex-shrink:0; }
-  .bivar-cell { width:44px; height:30px; cursor:pointer; border:1px solid rgba(0,0,0,.2);
-    transition:transform .1s,box-shadow .1s; }
-  .bivar-cell:hover,.bivar-cell.active { transform:scale(1.08); box-shadow:0 0 0 2px #fff4; z-index:2; position:relative; }
-  .legend-axis-x { display:flex; margin-left:68px; padding-left:8px; margin-top:4px; }
-  .legend-axis-x span { width:44px; font-size:9px; color:var(--muted); text-align:center; }
-  .legend-axis-label { font-size:9px; color:var(--muted); margin-left:76px; margin-top:2px; }
-  .callout { border:1px solid var(--border); border-radius:6px; padding:10px 12px;
-    cursor:pointer; transition:border-color .15s,background .15s; }
-  .callout:hover,.callout.active { border-color:#ffffff44; background:#ffffff08; }
-  .callout-dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
-  .callout-title { font-size:12px; font-weight:500; display:flex; align-items:center; margin-bottom:3px; }
-  .callout-stat { font-size:20px; font-family:'DM Serif Display',serif; line-height:1; margin-bottom:2px; }
-  .callout-desc { font-size:11px; color:var(--muted); line-height:1.4; }
-  .method-note { font-size:10px; color:var(--muted); line-height:1.6; border-top:1px solid var(--border); padding-top:12px; }
-  #map-wrap { position:relative; overflow:hidden; background:var(--bg); }
-  #tract-canvas { position:absolute; top:0; left:0; width:100%; height:100%; }
-  #border-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-  #hit-svg { position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; }
-  #loading { position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; background:var(--bg); gap:16px; z-index:20; }
-  #loading-text { font-size:13px; color:var(--muted); }
-  .spinner { width:32px; height:32px; border:2px solid var(--border);
-    border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  #tooltip { position:fixed; pointer-events:none; background:#1c2128ee;
-    border:1px solid var(--border); border-radius:8px; padding:10px 14px;
-    font-size:12px; opacity:0; transition:opacity .1s; max-width:260px; z-index:100; backdrop-filter:blur(8px); }
-  #tt-name { font-weight:600; font-size:13px; margin-bottom:6px; }
-  .tt-row { display:flex; justify-content:space-between; gap:16px; margin-top:2px; }
-  .tt-label { color:var(--muted); }
-  #tt-badge { display:inline-block; margin-top:6px; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:.04em; }
-  #scale-bar { position:absolute; bottom:20px; right:20px; background:#161b22cc;
-    border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:10px; color:var(--muted); z-index:5; }
-  #tract-badge { position:absolute; top:16px; right:16px; background:#161b22cc;
-    border:1px solid var(--border); border-radius:6px; padding:6px 10px;
-    font-size:10px; color:var(--muted); backdrop-filter:blur(4px); display:none; z-index:5; }
-  #tract-badge strong { color:var(--text); }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#0d1117; --surface:#161b22; --border:#21262d;
+  --text:#e6edf3; --muted:#6e7681;
+  --c0:#e8e8e8; --c1:#f0c282; --c2:#d4541a;
+  --c3:#9ac8e2; --c4:#b58fb0; --c5:#8b2252;
+  --c6:#3a7cb8; --c7:#5a4a8a; --c8:#2d1429;
+}
+html,body { width:100%; height:100%; background:var(--bg); color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:14px; overflow:hidden; }
+#app { display:grid; grid-template-columns:300px 1fr; height:100vh; }
+#sidebar { background:var(--surface); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; overflow-y:auto; padding:24px 20px; gap:20px; z-index:10; }
+#sidebar h1 { font-family:'DM Serif Display',serif; font-size:22px; line-height:1.2; }
+#sidebar h1 em { font-style:italic; color:#a8d5b5; }
+.subtitle { font-size:12px; color:var(--muted); line-height:1.6; margin-top:8px; }
+.section-label { font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.legend-row { display:flex; align-items:center; margin-bottom:3px; }
+.legend-row-label { width:68px; font-size:10px; color:var(--muted); text-align:right; padding-right:8px; flex-shrink:0; }
+.bivar-cell { width:44px; height:30px; cursor:pointer; border:1px solid rgba(0,0,0,.2); transition:transform .1s; }
+.bivar-cell:hover,.bivar-cell.active { transform:scale(1.08); box-shadow:0 0 0 2px #fff4; position:relative; z-index:2; }
+.legend-axis-x { display:flex; margin-left:76px; margin-top:4px; }
+.legend-axis-x span { width:44px; font-size:9px; color:var(--muted); text-align:center; }
+.legend-axis-label { font-size:9px; color:var(--muted); margin-left:76px; margin-top:2px; }
+.callout { border:1px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; transition:border-color .15s,background .15s; }
+.callout:hover,.callout.active { border-color:#ffffff44; background:#ffffff08; }
+.callout-dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+.callout-title { font-size:12px; font-weight:500; display:flex; align-items:center; margin-bottom:3px; }
+.callout-stat { font-size:20px; font-family:'DM Serif Display',serif; line-height:1; margin-bottom:2px; }
+.callout-desc { font-size:11px; color:var(--muted); line-height:1.4; }
+.method-note { font-size:10px; color:var(--muted); line-height:1.6; border-top:1px solid var(--border); padding-top:12px; }
+#map-wrap { position:relative; overflow:hidden; background:var(--bg); }
+#c { position:absolute; top:0; left:0; }
+#loading { position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; background:var(--bg); gap:16px; z-index:20; }
+#loading-text { font-size:13px; color:var(--muted); }
+.spinner { width:32px; height:32px; border:2px solid var(--border);
+  border-top-color:#58a6ff; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+#tooltip { position:fixed; pointer-events:none; background:#1c2128ee;
+  border:1px solid var(--border); border-radius:8px; padding:10px 14px;
+  font-size:12px; opacity:0; transition:opacity .1s; max-width:260px; z-index:100; backdrop-filter:blur(8px); }
+#tt-name { font-weight:600; font-size:13px; margin-bottom:6px; }
+.tt-row { display:flex; justify-content:space-between; gap:16px; margin-top:2px; }
+.tt-label { color:var(--muted); }
+#tt-badge { display:inline-block; margin-top:6px; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
+#info { position:absolute; bottom:20px; right:20px; background:#161b22cc;
+  border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:10px; color:var(--muted); z-index:5; }
 </style>
 </head>
 <body>
@@ -71,8 +61,7 @@
   <aside id="sidebar">
     <div>
       <h1>Who <em>Really</em> Lacks<br>Access to a Cath Lab?</h1>
-      <p class="subtitle">PCI access at the census-tract level — 84,414 tracts classified by
-        population density and estimated drive time to the nearest PCI-capable hospital.</p>
+      <p class="subtitle">84,414 census tracts classified by population density and drive time to the nearest PCI-capable hospital.</p>
     </div>
     <div>
       <div class="section-label">Density × Drive Time</div>
@@ -86,161 +75,150 @@
         <div class="callout" data-bivar="2">
           <div class="callout-title"><span class="callout-dot" style="background:var(--c2)"></span>Sparse + &gt;90 min away</div>
           <div class="callout-stat">7.7M people</div>
-          <div class="callout-desc">Rural Americans more than 90 drive minutes from a PCI hospital — the most access-deprived group.</div>
+          <div class="callout-desc">Rural Americans more than 90 drive minutes from a PCI hospital.</div>
         </div>
         <div class="callout" data-bivar="1">
           <div class="callout-title"><span class="callout-dot" style="background:var(--c1)"></span>Sparse + 30–90 min away</div>
           <div class="callout-stat">40.1M people</div>
-          <div class="callout-desc">Rural residents with moderate drive times — reachable but still far from urban cardiac care.</div>
+          <div class="callout-desc">Rural residents reachable but still far from urban cardiac care.</div>
         </div>
         <div class="callout" data-bivar="4">
           <div class="callout-title"><span class="callout-dot" style="background:var(--c4)"></span>Moderate density + 30–90 min</div>
           <div class="callout-stat">7.6M people</div>
-          <div class="callout-desc">Suburban and small-city residents with meaningful access gaps often missed in rural-only analyses.</div>
+          <div class="callout-desc">Suburban residents with meaningful access gaps.</div>
         </div>
         <div class="callout" data-bivar="5">
           <div class="callout-title"><span class="callout-dot" style="background:var(--c5)"></span>Moderate density + &gt;90 min</div>
           <div class="callout-stat">1.6M people</div>
-          <div class="callout-desc">Mid-density communities severely underserved — smaller cities and towns far from any cath lab.</div>
+          <div class="callout-desc">Smaller cities and towns far from any cath lab.</div>
         </div>
       </div>
     </div>
     <div class="method-note">
       <strong style="color:var(--text)">Method</strong><br>
-      Drive time: 2020 Census tract population centers → 1,248 PCI hospitals,
-      straight-line × 1.417 road factor ÷ 50 mph (&lt;50 mi) or 40 mph (≥50 mi).
-      Density tertiles are population-weighted (~110M people each).
+      Drive time: tract population centers → 1,248 PCI hospitals, straight-line × 1.417 road factor.
+      Density tertiles population-weighted (~110M each).
       Thresholds: &lt;965 · 965–4,199 · &gt;4,199 people/sq mi.
     </div>
   </aside>
 
   <main id="map-wrap">
-    <div id="loading">
-      <div class="spinner"></div>
-      <div id="loading-text">Loading tract geometries…</div>
-    </div>
-    <canvas id="tract-canvas"></canvas>
-    <canvas id="border-canvas"></canvas>
-    <div id="tract-badge"><strong id="tc-num">84,414</strong> tracts</div>
-    <div id="scale-bar">Census tracts · 2020 · 1,248 PCI hospitals</div>
+    <div id="loading"><div class="spinner"></div><div id="loading-text">Loading…</div></div>
+    <canvas id="c"></canvas>
+    <div id="info">Census tracts · 2020 · 1,248 PCI hospitals</div>
   </main>
 </div>
 
 <div id="tooltip">
   <div id="tt-name">—</div>
-  <div class="tt-row"><span class="tt-label">Population</span><span class="tt-val" id="tt-pop">—</span></div>
-  <div class="tt-row"><span class="tt-label">Density</span><span class="tt-val" id="tt-dens">—</span></div>
-  <div class="tt-row"><span class="tt-label">Drive time</span><span class="tt-val" id="tt-drive">—</span></div>
-  <div class="tt-row"><span class="tt-label">Road miles</span><span class="tt-val" id="tt-miles">—</span></div>
-  <div class="tt-row"><span class="tt-label">Nearest hospital</span><span class="tt-val" id="tt-hosp" style="max-width:150px;text-align:right;font-size:11px">—</span></div>
+  <div class="tt-row"><span class="tt-label">Population</span><span id="tt-pop">—</span></div>
+  <div class="tt-row"><span class="tt-label">Density</span><span id="tt-dens">—</span></div>
+  <div class="tt-row"><span class="tt-label">Drive time</span><span id="tt-drive">—</span></div>
+  <div class="tt-row"><span class="tt-label">Road miles</span><span id="tt-miles">—</span></div>
+  <div class="tt-row"><span class="tt-label">Nearest hospital</span><span id="tt-hosp" style="max-width:150px;text-align:right;font-size:11px">—</span></div>
   <div><span id="tt-badge">—</span></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
-const BIVAR_COLORS = ['#e8e8e8','#f0c282','#d4541a','#9ac8e2','#b58fb0','#8b2252','#3a7cb8','#5a4a8a','#2d1429'];
-const BIVAR_COLORS_DIM = ['#3a3a3a','#4a4030','#4a2010','#203040','#352535','#301020','#152840','#201828','#150810'];
-const BIVAR_LABELS = ['Sparse + <30 min','Sparse + 30–90 min','Sparse + >90 min',
-  'Moderate + <30 min','Moderate + 30–90 min','Moderate + >90 min',
-  'Dense + <30 min','Dense + 30–90 min','Dense + >90 min'];
-const DARK_BIVAR = new Set([2,5,6,7,8]);
+const COLORS = ['#e8e8e8','#f0c282','#d4541a','#9ac8e2','#b58fb0','#8b2252','#3a7cb8','#5a4a8a','#2d1429'];
+const LABELS = ['Sparse+<30min','Sparse+30–90min','Sparse+>90min',
+  'Moderate+<30min','Moderate+30–90min','Moderate+>90min',
+  'Dense+<30min','Dense+30–90min','Dense+>90min'];
+const DARK = new Set([2,5,6,7,8]);
 
-// Build legend
-const legendWrap = document.getElementById('legend-wrap');
-['Dense','Moderate','Sparse'].forEach((densLabel, di) => {
-  const d = 2 - di;
-  const row = document.createElement('div'); row.className = 'legend-row';
-  const lbl = document.createElement('div'); lbl.className = 'legend-row-label'; lbl.textContent = densLabel;
+// Legend
+const lw = document.getElementById('legend-wrap');
+['Dense','Moderate','Sparse'].forEach((dl,di) => {
+  const d = 2-di, row = document.createElement('div');
+  row.className = 'legend-row';
+  const lbl = document.createElement('div');
+  lbl.className = 'legend-row-label'; lbl.textContent = dl;
   row.appendChild(lbl);
   [2,1,0].forEach(acc => {
-    const bivar = acc + d * 3;
-    const cell = document.createElement('div'); cell.className = 'bivar-cell';
-    cell.style.background = BIVAR_COLORS[bivar]; cell.dataset.bivar = String(bivar);
-    cell.title = BIVAR_LABELS[bivar]; row.appendChild(cell);
+    const bv = acc+d*3, cell = document.createElement('div');
+    cell.className = 'bivar-cell';
+    cell.style.background = COLORS[bv];
+    cell.dataset.bivar = bv;
+    row.appendChild(cell);
   });
-  legendWrap.appendChild(row);
+  lw.appendChild(row);
 });
-const axisX = document.getElementById('axis-x');
 ['>90 min','30–90 min','<30 min'].forEach(l => {
-  const s = document.createElement('span'); s.textContent = l; axisX.appendChild(s);
+  const s = document.createElement('span'); s.textContent = l;
+  document.getElementById('axis-x').appendChild(s);
 });
 
+// Canvas setup
 const mapWrap = document.getElementById('map-wrap');
-const tractCanvas = document.getElementById('tract-canvas');
-const borderCanvas = document.getElementById('border-canvas');
-const loadText = document.getElementById('loading-text');
-
-// Canvas contexts
-let tractCtx, borderCtx;
-let W, H;
-let projection, pathGen;
-let tractFeatures, stateFeatures, lookup;
+const canvas = document.getElementById('c');
+const dpr = window.devicePixelRatio || 1;
+let W, H, ctx, proj, pathFn, lookup, tractFeatures, stateFeatures, quadtree, centroidData;
 let activeFilter = null;
 
-function setSize() {
-  W = mapWrap.clientWidth;
-  H = mapWrap.clientHeight;
-  tractCanvas.width = W; tractCanvas.height = H;
-  borderCanvas.width = W; borderCanvas.height = H;
-  tractCtx = tractCanvas.getContext('2d');
-  borderCtx = borderCanvas.getContext('2d');
+function resize() {
+  W = mapWrap.clientWidth; H = mapWrap.clientHeight;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
 }
+resize();
 
-let sortedFeatures = null; // pre-sorted by area, large first
+function redraw(filter) {
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0,0,W,H);
 
-function drawTracts(filter) {
-  tractCtx.clearRect(0, 0, W, H);
-  const ctxPath = d3.geoPath().projection(projection).context(tractCtx);
-  const features = sortedFeatures || tractFeatures.features;
-  let colorCounts = {};
-  features.forEach((f, i) => {
-    const geoid = String(f.id).padStart(11, '0');
+  // Draw tracts
+  const cp = d3.geoPath().projection(proj).context(ctx);
+  tractFeatures.features.forEach(f => {
+    if (!f.geometry) return;
+    const geoid = String(f.id).padStart(11,'0');
     const dat = lookup[geoid];
-    if (!dat || !f.geometry) return;
-    const bivar = dat.bivar;
-    const color = (filter !== null && bivar !== filter) ? '#1a1f28' : BIVAR_COLORS[bivar];
-    colorCounts[color] = (colorCounts[color]||0)+1;
-    tractCtx.fillStyle = color;
-    tractCtx.beginPath();
-    ctxPath(f);
-    tractCtx.fill();
+    if (!dat) return;
+    ctx.fillStyle = (filter !== null && dat.bivar !== filter) ? '#161b22' : COLORS[dat.bivar];
+    ctx.beginPath();
+    cp(f);
+    ctx.fill('evenodd');
   });
-  if (!drawTracts._logged) {
-    drawTracts._logged = true;
-    console.log('Color counts applied to canvas:', colorCounts);
-    // Check a specific orange tract
-    const orangeGeoid = '56029965800'; // Park County WY - large sparse tract
-    const d = lookup[orangeGeoid];
-    console.log('Park Co WY lookup:', d);
-  }
-}
 
-function drawBorders() {
-  borderCtx.clearRect(0, 0, W, H);
-  const ctxPath = d3.geoPath().projection(projection).context(borderCtx);
-  borderCtx.strokeStyle = '#0d1117';
-  borderCtx.lineWidth = 0.8;
+  // State borders
+  const sp = d3.geoPath().projection(proj).context(ctx);
+  ctx.strokeStyle = '#0d1117';
+  ctx.lineWidth = 0.8;
   stateFeatures.features.forEach(f => {
-    borderCtx.beginPath();
-    ctxPath(f);
-    borderCtx.stroke();
+    ctx.beginPath(); sp(f); ctx.stroke();
   });
 }
 
-Promise.all([
-  fetch('tracts-lonlat.json').then(r => { loadText.textContent = 'Loading bivariate data…'; return r.json(); }),
-  fetch('tract_bivar_data.json').then(r => r.json()),
-  fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(r => r.json()),
-])
-.then(([tractTopo, bdata, stateTopo]) => {
-  loadText.textContent = 'Building lookup…';
+function buildQuadtree() {
+  centroidData = [];
+  const cp = d3.geoPath().projection(proj);
+  tractFeatures.features.forEach(f => {
+    if (!f.geometry) return;
+    const geoid = String(f.id).padStart(11,'0');
+    const dat = lookup[geoid];
+    if (!dat) return;
+    const c = cp.centroid(f);
+    if (!isNaN(c[0]) && !isNaN(c[1])) centroidData.push({x:c[0],y:c[1],geoid,dat});
+  });
+  quadtree = d3.quadtree().x(d=>d.x).y(d=>d.y).addAll(centroidData);
+}
 
+const lt = document.getElementById('loading-text');
+Promise.all([
+  fetch('tracts-lonlat.json').then(r=>{ lt.textContent='Loading data…'; return r.json(); }),
+  fetch('tract_bivar_data.json').then(r=>r.json()),
+  fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(r=>r.json()),
+]).then(([tractTopo, bdata, stateTopo]) => {
+  lt.textContent = 'Building lookup…';
   lookup = Object.create(null);
-  for (let i = 0; i < bdata.geoids.length; i++) {
+  for (let i=0; i<bdata.geoids.length; i++) {
     lookup[bdata.geoids[i]] = {
-      bivar: bdata.bivar[i], pop: bdata.pop[i], density: bdata.density[i],
-      miles: bdata.miles[i], drive_min: bdata.drive_min[i], hospital: bdata.hospital[i]
+      bivar:bdata.bivar[i], pop:bdata.pop[i], density:bdata.density[i],
+      miles:bdata.miles[i], drive_min:bdata.drive_min[i], hospital:bdata.hospital[i]
     };
   }
 
@@ -248,168 +226,83 @@ Promise.all([
   tractFeatures = topojson.feature(tractTopo, tractTopo.objects[objName]);
   stateFeatures = topojson.feature(stateTopo, stateTopo.objects.states);
 
-  setSize();
-  projection = d3.geoAlbersUsa().fitSize([W, H], tractFeatures);
-  pathGen = d3.geoPath().projection(projection);
+  proj = d3.geoAlbersUsa().fitSize([W,H], tractFeatures);
+  pathFn = d3.geoPath().projection(proj);
 
-  loadText.textContent = 'Sorting tracts…';
-
-  // Pre-sort features by geographic area (lon/lat bbox) - large tracts first
-  // so small urban tracts render on top and are visible
-  const geoPath0 = d3.geoPath(); // no projection - use raw lon/lat bbox
-  sortedFeatures = tractFeatures.features.slice().sort((a, b) => {
-    if (!a.geometry) return 1;
-    if (!b.geometry) return -1;
-    const ba = geoPath0.bounds(a);
-    const bb = geoPath0.bounds(b);
-    const areaA = (ba[1][0]-ba[0][0]) * (ba[1][1]-ba[0][1]);
-    const areaB = (bb[1][0]-bb[0][0]) * (bb[1][1]-bb[0][1]);
-    return areaB - areaA; // largest first
-  });
-
-  loadText.textContent = 'Drawing 84,414 tracts…';
-
-  // Draw in next frame so loading text shows
+  lt.textContent = 'Drawing tracts…';
   requestAnimationFrame(() => {
-    drawTracts(null);
-    drawBorders();
-
-
+    redraw(null);
+    buildQuadtree();
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('tract-badge').style.display = 'block';
-
-    // Quadtree for hover
-    const centroidData = [];
-    tractFeatures.features.forEach(f => {
-      const geoid = String(f.id).padStart(11, '0');
-      const dat = lookup[geoid];
-      if (!dat || !f.geometry) return;
-      const c = pathGen.centroid(f);
-      if (!isNaN(c[0]) && !isNaN(c[1])) {
-        centroidData.push({ x: c[0], y: c[1], geoid, dat });
-      }
-    });
-    const quadtree = d3.quadtree().x(d => d.x).y(d => d.y).addAll(centroidData);
-
-    // Zoom & pan using transform on canvas
-    // Zoom: use CSS transform on canvas elements for smooth pan/zoom
-    // Only redraw canvas content when zoom ends (not during pan)
-    let currentTransform = d3.zoomIdentity;
-    
-    const zoom = d3.zoom().scaleExtent([1, 20])
-      .on('zoom', e => {
-        currentTransform = e.transform;
-        // Apply CSS transform for smooth zoom/pan without redrawing
-        const t = e.transform;
-        tractCanvas.style.transformOrigin = '0 0';
-        tractCanvas.style.transform = `translate(${t.x}px,${t.y}px) scale(${t.k})`;
-        borderCanvas.style.transformOrigin = '0 0';
-        borderCanvas.style.transform = `translate(${t.x}px,${t.y}px) scale(${t.k})`;
-      })
-      .on('end', e => {
-        // On zoom end, redraw at full resolution with updated projection
-        const t = e.transform;
-        // Reset CSS transforms
-        tractCanvas.style.transform = '';
-        borderCanvas.style.transform = '';
-        // Update projection
-        const baseProj = d3.geoAlbersUsa().fitSize([W, H], tractFeatures);
-        const [tx, ty] = baseProj.translate();
-        const s = baseProj.scale();
-        projection = d3.geoAlbersUsa()
-          .scale(s * t.k)
-          .translate([tx * t.k + t.x, ty * t.k + t.y]);
-        pathGen = d3.geoPath().projection(projection);
-        drawTracts(activeFilter);
-        drawBorders();
-        // Rebuild quadtree
-        centroidData.length = 0;
-        tractFeatures.features.forEach(f => {
-          const geoid = String(f.id).padStart(11, '0');
-          const dat = lookup[geoid];
-          if (!dat || !f.geometry) return;
-          const c = pathGen.centroid(f);
-          if (!isNaN(c[0]) && !isNaN(c[1])) centroidData.push({ x: c[0], y: c[1], geoid, dat });
-        });
-        quadtree.removeAll(centroidData);
-        quadtree.addAll(centroidData);
-      });
-
-    d3.select(tractCanvas).call(zoom);
 
     // Tooltip
     const tt = document.getElementById('tooltip');
-    tractCanvas.addEventListener('mousemove', e => {
-      const rect = tractCanvas.getBoundingClientRect();
-      // Adjust for CSS transform scale
-      const scaleX = tractCanvas.width / rect.width;
-      const scaleY = tractCanvas.height / rect.height;
-      const mx = (e.clientX - rect.left) * scaleX;
-      const my = (e.clientY - rect.top) * scaleY;
-      const nearest = quadtree.find(mx, my, 30 * Math.max(scaleX, scaleY));
-      if (!nearest) { tt.style.opacity = '0'; return; }
-      const { geoid, dat } = nearest;
+    canvas.addEventListener('mousemove', e => {
+      const r = canvas.getBoundingClientRect();
+      const mx = (e.clientX-r.left) * (W/r.width);
+      const my = (e.clientY-r.top) * (H/r.height);
+      const n = quadtree ? quadtree.find(mx,my,25) : null;
+      if (!n) { tt.style.opacity='0'; return; }
+      const {geoid,dat} = n;
       document.getElementById('tt-name').textContent =
-        `Tract ${parseInt(geoid.slice(5)) / 100} · ${geoid.slice(0,2)}-${geoid.slice(2,5)}`;
+        `Tract ${parseInt(geoid.slice(5))/100} · ${geoid.slice(0,2)}-${geoid.slice(2,5)}`;
       document.getElementById('tt-pop').textContent = dat.pop.toLocaleString();
-      document.getElementById('tt-dens').textContent = dat.density.toLocaleString() + ' / sq mi';
-      document.getElementById('tt-drive').textContent = dat.drive_min + ' min';
-      document.getElementById('tt-miles').textContent = dat.miles + ' mi';
+      document.getElementById('tt-dens').textContent = dat.density.toLocaleString()+' / sq mi';
+      document.getElementById('tt-drive').textContent = dat.drive_min+' min';
+      document.getElementById('tt-miles').textContent = dat.miles+' mi';
       document.getElementById('tt-hosp').textContent = dat.hospital;
       const badge = document.getElementById('tt-badge');
-      badge.textContent = BIVAR_LABELS[dat.bivar];
-      badge.style.background = BIVAR_COLORS[dat.bivar];
-      badge.style.color = DARK_BIVAR.has(dat.bivar) ? '#fff' : '#111';
-      tt.style.opacity = '1';
-      const x = e.clientX + 16, ttW = tt.offsetWidth || 260;
-      tt.style.left = (x + ttW > window.innerWidth ? e.clientX - ttW - 10 : x) + 'px';
-      tt.style.top = (e.clientY - 10) + 'px';
+      badge.textContent = LABELS[dat.bivar];
+      badge.style.background = COLORS[dat.bivar];
+      badge.style.color = DARK.has(dat.bivar)?'#fff':'#111';
+      tt.style.opacity='1';
+      const x=e.clientX+16, tw=tt.offsetWidth||260;
+      tt.style.left=(x+tw>window.innerWidth?e.clientX-tw-10:x)+'px';
+      tt.style.top=(e.clientY-10)+'px';
     });
-    tractCanvas.addEventListener('mouseleave', () => tt.style.opacity = '0');
+    canvas.addEventListener('mouseleave',()=>tt.style.opacity='0');
 
-    // Highlight
-    function highlightBivar(bivar) {
-      activeFilter = bivar;
-      drawTracts(bivar);
-      let n = 0;
-      if (bivar !== null) {
-        tractFeatures.features.forEach(f => {
-          const dat = lookup[String(f.id).padStart(11,'0')];
-          if (dat && dat.bivar === bivar) n++;
-        });
-      }
-      document.getElementById('tc-num').textContent = bivar === null ? '84,414' : n.toLocaleString();
-    }
-    function clearAll() {
-      highlightBivar(null);
-      document.querySelectorAll('.bivar-cell.active,.callout.active').forEach(el => el.classList.remove('active'));
-    }
-    function activateBivar(bivar) {
-      highlightBivar(bivar);
-      document.querySelectorAll(`[data-bivar="${bivar}"]`).forEach(el => el.classList.add('active'));
-    }
-
-    document.querySelectorAll('.bivar-cell').forEach(el => {
-      el.addEventListener('mouseenter', () => activateBivar(+el.dataset.bivar));
-      el.addEventListener('mouseleave', clearAll);
+    // Zoom
+    const zoom = d3.zoom().scaleExtent([1,20]).on('zoom', e => {
+      const t = e.transform;
+      const base = d3.geoAlbersUsa().fitSize([W,H],tractFeatures);
+      const [tx,ty] = base.translate();
+      const s = base.scale();
+      proj = d3.geoAlbersUsa().scale(s*t.k).translate([tx*t.k+t.x, ty*t.k+t.y]);
+      redraw(activeFilter);
+      buildQuadtree();
     });
-    document.querySelectorAll('.callout[data-bivar]').forEach(el => {
-      el.addEventListener('mouseenter', () => activateBivar(+el.dataset.bivar));
-      el.addEventListener('mouseleave', clearAll);
+    d3.select(canvas).call(zoom);
+
+    // Highlights
+    function highlight(bv) {
+      activeFilter = bv;
+      redraw(bv);
+      document.querySelectorAll('.bivar-cell,.callout').forEach(el=>{
+        el.classList.toggle('active', el.dataset.bivar == bv);
+      });
+    }
+    function clear() { activeFilter=null; redraw(null); document.querySelectorAll('.active').forEach(el=>el.classList.remove('active')); }
+
+    document.querySelectorAll('.bivar-cell').forEach(el=>{
+      el.addEventListener('mouseenter',()=>highlight(+el.dataset.bivar));
+      el.addEventListener('mouseleave',clear);
+    });
+    document.querySelectorAll('.callout[data-bivar]').forEach(el=>{
+      el.addEventListener('mouseenter',()=>highlight(+el.dataset.bivar));
+      el.addEventListener('mouseleave',clear);
     });
 
-    window.addEventListener('resize', () => {
-      setSize();
-      projection = d3.geoAlbersUsa().fitSize([W, H], tractFeatures);
-      pathGen = d3.geoPath().projection(projection);
-      drawTracts(activeFilter);
-      drawBorders();
+    window.addEventListener('resize',()=>{
+      resize();
+      proj = d3.geoAlbersUsa().fitSize([W,H],tractFeatures);
+      redraw(activeFilter);
+      buildQuadtree();
     });
   });
-})
-.catch(err => {
-  document.getElementById('loading-text').textContent = '⚠ ' + err.message;
-  console.error(err);
+}).catch(e=>{
+  document.getElementById('loading-text').textContent='⚠ '+e.message;
+  console.error(e);
 });
 </script>
 </body>
