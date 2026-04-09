@@ -245,6 +245,18 @@ Promise.all([
   requestAnimationFrame(() => {
     drawTracts(null);
     drawBorders();
+    // TEST: draw a visible red dot to confirm canvas is rendering
+    tractCtx.fillStyle = 'red';
+    tractCtx.fillRect(W/2-20, H/2-20, 40, 40);
+    console.log('Canvas W,H:', W, H);
+    console.log('Projection test - project [-100, 40]:', projection([-100, 40]));
+    // Check first tract path
+    const tf = tractFeatures.features[0];
+    console.log('First feature id:', tf.id, 'geometry type:', tf.geometry?.type);
+    const ctxPathTest = d3.geoPath().projection(projection).context(tractCtx);
+    // Get the SVG path string to see coordinates
+    const svgPath = d3.geoPath().projection(projection)(tf);
+    console.log('First tract SVG path (first 100):', svgPath ? svgPath.slice(0,100) : 'NULL/EMPTY');
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('tract-badge').style.display = 'block';
