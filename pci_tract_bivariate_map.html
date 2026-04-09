@@ -171,8 +171,7 @@ function redraw(filter) {
   ctx.fillStyle = '#0d1117';
   ctx.fillRect(0,0,W,H);
 
-  // Draw tracts
-  const cp = d3.geoPath().projection(proj).context(ctx);
+  // Draw tracts — new path generator per feature (required for per-feature fill)
   tractFeatures.features.forEach(f => {
     if (!f.geometry) return;
     const geoid = String(f.id).padStart(11,'0');
@@ -180,16 +179,17 @@ function redraw(filter) {
     if (!dat) return;
     ctx.fillStyle = (filter !== null && dat.bivar !== filter) ? '#161b22' : COLORS[dat.bivar];
     ctx.beginPath();
-    cp(f);
+    d3.geoPath().projection(proj).context(ctx)(f);
     ctx.fill('evenodd');
   });
 
   // State borders
-  const sp = d3.geoPath().projection(proj).context(ctx);
   ctx.strokeStyle = '#0d1117';
   ctx.lineWidth = 0.8;
   stateFeatures.features.forEach(f => {
-    ctx.beginPath(); sp(f); ctx.stroke();
+    ctx.beginPath();
+    d3.geoPath().projection(proj).context(ctx)(f);
+    ctx.stroke();
   });
 }
 
