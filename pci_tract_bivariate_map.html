@@ -207,14 +207,14 @@ Promise.all([
     .join('path')
       .attr('d',path)
       .attr('fill',d=>{
-        const dat=lookup[d.id];
+        const dat=lookup[String(d.id).padStart(11,'0')];
         return dat?BIVAR_COLORS[dat.bivar]:'#1c2128';
       })
       .attr('stroke','#0d1117')
       .attr('stroke-width',0.1)
       .on('mousemove',function(event,d){
-        const dat=lookup[d.id]; if(!dat) return;
-        const geoid=String(d.id);
+        const dat=lookup[String(d.id).padStart(11,'0')]; if(!dat) return;
+        const geoid=String(d.id).padStart(11,'0');
         document.getElementById('tt-name').textContent=
           `Tract ${parseInt(geoid.slice(5))/100} · ${geoid.slice(0,2)}-${geoid.slice(2,5)}`;
         document.getElementById('tt-pop').textContent=dat.pop.toLocaleString();
@@ -249,7 +249,7 @@ Promise.all([
   // Highlight logic
   function highlightBivar(bivar){
     tractPaths.each(function(d){
-      const dat=lookup[d.id]; if(!dat) return;
+      const dat=lookup[String(d.id).padStart(11,'0')]; if(!dat) return;
       if(bivar===null){
         this.setAttribute('fill',BIVAR_COLORS[dat.bivar]);
         this.setAttribute('opacity','1');
