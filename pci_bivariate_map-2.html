@@ -52,14 +52,14 @@
 
   /* ── Bottom panel ── */
   #bottom-panel {
-    position: absolute;
+    position: fixed;
     bottom: 0; left: 0; right: 0;
-    background: var(--surface2);
+    background: rgba(22, 26, 40, 0.96);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border);
     padding: 20px 32px;
-    z-index: 1000;
+    z-index: 10000;
   }
   #bottom-panel.hidden { display: none; }
 
@@ -200,7 +200,9 @@
 
 <div id="map-container">
   <div id="map"></div>
-  <div id="bottom-panel" class="hidden">
+</div>
+
+<div id="bottom-panel" class="hidden">
   <div class="panel-inner">
     <div class="matrix-section">
       <div class="matrix-header">Hover any cell to highlight tracts</div>
@@ -228,7 +230,6 @@
       <div class="cat-grid" id="cat-grid"></div>
     </div>
   </div>
-</div>
 </div>
 
 <script>
