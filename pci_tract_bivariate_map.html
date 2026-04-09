@@ -201,6 +201,20 @@ Promise.all([
   const projection=d3.geoAlbersUsa().fitSize([W,H],tractFeatures);
   const path=d3.geoPath().projection(projection);
 
+  // Sort by bbox area so large tracts render first (bottom of SVG stack)
+  // This ensures small urban tracts on top capture mouse events correctly
+  tractFeatures.features.sort((a, b) => {
+    const bbox = f => {
+      const coords = [];
+      const collect = c => Array.isArray(c[0]) ? c.forEach(collect) : coords.push(c);
+      if (f.geometry && f.geometry.coordinates) collect(f.geometry.coordinates);
+      if (!coords.length) return 0;
+      const lons = coords.map(c=>c[0]), lats = coords.map(c=>c[1]);
+      return (Math.max(...lons)-Math.min(...lons)) * (Math.max(...lats)-Math.min(...lats));
+    };
+    return bbox(b) - bbox(a);
+  });
+
   // Draw tracts
   const tractPaths=gTracts.selectAll('path')
     .data(tractFeatures.features)
@@ -212,6 +226,7 @@ Promise.all([
       })
       .attr('stroke','#0d1117')
       .attr('stroke-width',0.1)
+      .style('pointer-events','all')
       .on('mousemove',function(event,d){
         const dat=lookup[String(d.id).padStart(11,'0')]; if(!dat) return;
         const geoid=String(d.id).padStart(11,'0');
@@ -241,7 +256,8 @@ Promise.all([
       .attr('d',path)
       .attr('fill','none')
       .attr('stroke','#0d1117')
-      .attr('stroke-width',0.8);
+      .attr('stroke-width',0.8)
+      .style('pointer-events','none');
 
   document.getElementById('loading').style.display='none';
   document.getElementById('tract-badge').style.display='block';
