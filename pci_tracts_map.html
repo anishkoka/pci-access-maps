@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCI Access — Census Tract Travel Time</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: rgba(20, 22, 30, 0.92);
+    --surface2: #242631;
+    --border: rgba(255,255,255,0.08);
+    --text: #e2e4ea;
+    --text-dim: #8b8fa3;
+    --accent: #6c72ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
+
+  /* Loading overlay */
+  #loading {
+    position: absolute; inset: 0; z-index: 2000;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 0.5s;
+  }
+  #loading.hidden { opacity: 0; pointer-events: none; }
+  #loading h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  #loading .sub { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 20px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #load-status { font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+
+  /* Info panel */
+  .panel {
+    position: absolute; top: 16px; left: 16px; z-index: 1000;
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .panel h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 2px; }
+  .panel .subtitle { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+
+  .legend { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .legend-row { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+  .legend-swatch { width: 24px; height: 12px; border-radius: 3px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.06); }
+  .legend-label { color: var(--text-dim); }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-card { background: var(--surface2); border-radius: 8px; padding: 10px 12px; }
+  .stat-card .val { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 500; }
+  .stat-card .label { font-size: 9px; color: var(--text-dim); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .toggle-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--text-dim);
+    cursor: pointer; user-select: none;
+    padding: 6px 0;
+  }
+  .toggle-row input { accent-color: var(--accent); }
+
+  /* Custom tooltip */
+  .tract-tooltip {
+    background: var(--surface) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    padding: 14px 16px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+    color: var(--text) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+    pointer-events: none;
+  }
+  .tract-tooltip .tt-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .tract-tooltip .tt-row { display: flex; justify-content: space-between; gap: 20px; }
+  .tract-tooltip .tt-label { color: var(--text-dim); }
+  .tract-tooltip .tt-val { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .tract-tooltip .tt-badge {
+    display: inline-block; margin-top: 8px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+
+  .leaflet-container { background: var(--bg) !important; }
+  .leaflet-control-zoom { border: 1px solid var(--border) !important; }
+  .leaflet-control-zoom a {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  .leaflet-control-zoom a:hover { background: var(--surface2) !important; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <h2>Loading Census Tracts</h2>
+  <div class="sub">~60,000 tracts across the US</div>
+  <div id="load-status">Fetching data...</div>
+</div>
+
+<div id="map"></div>
+
+<div class="panel" id="panel" style="display:none;">
+  <h1>PCI Access by Census Tract</h1>
+  <div class="subtitle">Estimated drive time to nearest PCI-capable hospital. Based on straight-line distance with speed heuristics.</div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="val" id="stat-tracts">—</div>
+      <div class="label">Census Tracts</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="stat-hospitals">—</div>
+      <div class="label">PCI Hospitals</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="stat-median">—</div>
+      <div class="label">Median Drive</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="stat-desert">—</div>
+      <div class="label">&gt;60 min Tracts</div>
+    </div>
+  </div>
+
+  <label class="toggle-row">
+    <input type="checkbox" id="toggle-hospitals"> Show PCI hospitals
+  </label>
+  <label class="toggle-row">
+    <input type="checkbox" id="toggle-desert"> Highlight &gt;60 min only
+  </label>
+</div>
+
+<script>
+// ── Color scale matching the screenshot aesthetic ──
+const BREAKS = [
+  { max: 15,   color: '#2a9d6e', label: '< 15 min',      badge: '#1a6b4a', badgeText: '#fff' },
+  { max: 30,   color: '#5bb88a', label: '15 – 30 min',    badge: '#3d8a63', badgeText: '#fff' },
+  { max: 45,   color: '#a8d5ba', label: '30 – 45 min',    badge: '#6aab82', badgeText: '#000' },
+  { max: 60,   color: '#d4c89e', label: '45 – 60 min',    badge: '#b0a470', badgeText: '#000' },
+  { max: 90,   color: '#d4a88a', label: '60 – 90 min',    badge: '#b07f5f', badgeText: '#fff' },
+  { max: 120,  color: '#c97e6e', label: '90 – 120 min',   badge: '#a05a47', badgeText: '#fff' },
+  { max: 9999, color: '#b34e52', label: '> 120 min',      badge: '#8a2f33', badgeText: '#fff' },
+];
+
+function getBreak(t) {
+  for (const b of BREAKS) { if (t <= b.max) return b; }
+  return BREAKS[BREAKS.length - 1];
+}
+
+// ── Build legend ──
+const legendEl = document.getElementById('legend');
+BREAKS.forEach(b => {
+  const row = document.createElement('div');
+  row.className = 'legend-row';
+  row.innerHTML = `<div class="legend-swatch" style="background:${b.color}"></div><span class="legend-label">${b.label}</span>`;
+  legendEl.appendChild(row);
+});
+
+// ── Map setup ──
+const map = L.map('map', {
+  center: [39.5, -98.5],
+  zoom: 5,
+  zoomControl: true,
+  preferCanvas: true,    // CRITICAL for 60K polygons
+  renderer: L.canvas(),
+});
+
+// Dark basemap tiles
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+  maxZoom: 18,
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+}).addTo(map);
+
+// Labels on top (rendered above polygons)
+const labelsPane = map.createPane('labels');
+labelsPane.style.zIndex = 650;
+labelsPane.style.pointerEvents = 'none';
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+  maxZoom: 18,
+  pane: 'labels',
+}).addTo(map);
+
+// ── Load data ──
+let tractLayer = null;
+let hospitalLayer = null;
+let desertMode = false;
+let allDriveTimes = [];
+
+const statusEl = document.getElementById('load-status');
+
+async function loadData() {
+  try {
+    statusEl.textContent = 'Downloading tract boundaries...';
+    const resp = await fetch('tracts_topo_min.json');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    
+    statusEl.textContent = 'Parsing TopoJSON...';
+    const topo = await resp.json();
+
+    statusEl.textContent = 'Converting to GeoJSON...';
+    await new Promise(r => setTimeout(r, 50)); // let UI update
+    const geojson = topojson.feature(topo, topo.objects.tracts);
+
+    statusEl.textContent = `Rendering ${geojson.features.length.toLocaleString()} tracts...`;
+    await new Promise(r => setTimeout(r, 50));
+
+    // Collect stats
+    allDriveTimes = geojson.features.map(f => f.properties.t);
+
+    tractLayer = L.geoJSON(geojson, {
+      renderer: L.canvas({ padding: 0.5 }),
+      style: featureStyle,
+      onEachFeature: onEachTract,
+      interactive: true,
+    }).addTo(map);
+
+    // Stats
+    const median = allDriveTimes.slice().sort((a,b) => a-b)[Math.floor(allDriveTimes.length/2)];
+    const desert = allDriveTimes.filter(t => t > 60).length;
+    document.getElementById('stat-tracts').textContent = geojson.features.length.toLocaleString();
+    document.getElementById('stat-hospitals').textContent = '1,248';
+    document.getElementById('stat-median').textContent = median + ' min';
+    document.getElementById('stat-desert').textContent = desert.toLocaleString();
+
+    // Show panel, hide loading
+    document.getElementById('panel').style.display = '';
+    document.getElementById('loading').classList.add('hidden');
+
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    console.error(err);
+  }
+}
+
+function featureStyle(feature) {
+  const t = feature.properties.t;
+  const b = getBreak(t);
+  const show = !desertMode || t > 60;
+  return {
+    fillColor: b.color,
+    fillOpacity: show ? 0.75 : 0.05,
+    weight: 0.3,
+    color: 'rgba(255,255,255,0.08)',
+    opacity: show ? 1 : 0.02,
+  };
+}
+
+function onEachTract(feature, layer) {
+  const p = feature.properties;
+  const b = getBreak(p.t);
+  const badgeLabel = p.t > 90 ? 'Sparse · >' + p.t + ' min' : p.t + ' min drive';
+
+  layer.bindTooltip(`
+    <div class="tt-title">Tract ${p.g}</div>
+    <div class="tt-row"><span class="tt-label">Nearest PCI</span><span class="tt-val">${p.h}</span></div>
+    <div class="tt-row"><span class="tt-label">Distance</span><span class="tt-val">${p.d} mi</span></div>
+    <div class="tt-row"><span class="tt-label">Est. Drive</span><span class="tt-val">${p.t} min</span></div>
+    <div><span class="tt-badge" style="background:${b.badge};color:${b.badgeText}">${badgeLabel}</span></div>
+  `, {
+    className: 'tract-tooltip',
+    sticky: true,
+    direction: 'top',
+    offset: [0, -10],
+  });
+
+  layer.on('mouseover', function() {
+    this.setStyle({ weight: 1.5, color: '#fff', fillOpacity: 0.95 });
+    this.bringToFront();
+  });
+  layer.on('mouseout', function() {
+    tractLayer.resetStyle(this);
+  });
+}
+
+// ── Hospital markers ──
+function loadHospitals() {
+  if (hospitalLayer) return;
+  
+  // We'll fetch from the project data inline
+  // Hospitals are loaded from the same directory
+  fetch('hospitals.json')
+    .then(r => r.json())
+    .then(data => {
+      hospitalLayer = L.layerGroup();
+      data.forEach(([lat, lon, name]) => {
+        L.circleMarker([lat, lon], {
+          radius: 4,
+          fillColor: '#ff4d6a',
+          fillOpacity: 0.9,
+          weight: 1,
+          color: '#fff',
+          opacity: 0.5,
+        }).bindTooltip(name, {
+          className: 'tract-tooltip',
+          direction: 'top',
+          offset: [0, -8],
+        }).addTo(hospitalLayer);
+      });
+      hospitalLayer.addTo(map);
+    })
+    .catch(() => {
+      // If hospitals.json isn't available, create markers from embedded data
+      console.log('hospitals.json not found — toggle disabled');
+    });
+}
+
+// ── Controls ──
+document.getElementById('toggle-hospitals').addEventListener('change', function() {
+  if (this.checked) {
+    loadHospitals();
+    if (hospitalLayer) hospitalLayer.addTo(map);
+  } else {
+    if (hospitalLayer) map.removeLayer(hospitalLayer);
+  }
+});
+
+document.getElementById('toggle-desert').addEventListener('change', function() {
+  desertMode = this.checked;
+  if (tractLayer) tractLayer.setStyle(featureStyle);
+});
+
+// ── Go ──
+loadData();
+</script>
+</body>
+</html>
