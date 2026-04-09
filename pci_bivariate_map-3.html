@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCI Access — Bivariate Choropleth by Census Tract</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1e2a;
+    --surface: rgba(22, 26, 38, 0.94);
+    --surface2: rgba(26, 30, 44, 0.97);
+    --border: rgba(255,255,255,0.07);
+    --text: #dfe2ea;
+    --text-dim: #7c8298;
+    --text-bright: #fff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100vh; overflow: hidden;
+  }
+
+  #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
+
+  /* Loading */
+  #loading {
+    position: fixed; inset: 0; z-index: 90000; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.6s;
+  }
+  #loading.hidden { opacity: 0; pointer-events: none; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: #6c8aec; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  #load-status { font-size: 12px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+
+  /* ═══ Left panel — matrix legend ═══ */
+  #left-panel {
+    position: fixed; top: 16px; left: 16px; z-index: 50000;
+    background: var(--surface2);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 22px;
+    width: 290px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    display: none;
+  }
+  #left-panel h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 2px; }
+  #left-panel .sub { font-size: 11px; color: var(--text-dim); margin-bottom: 18px; line-height: 1.5; }
+
+  .mlabel { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 8px; }
+  .mouter { display: flex; align-items: stretch; margin-bottom: 14px; }
+  .myaxis { writing-mode: vertical-lr; transform: rotate(180deg); font-size: 9px; color: var(--text-dim); text-align: center; margin-right: 6px; }
+  .mrows { display: flex; flex-direction: column; justify-content: space-around; margin-right: 6px; }
+  .mrows div { font-size: 10px; color: var(--text-dim); text-align: right; font-weight: 500; line-height: 50px; }
+  .mgrid { display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); gap: 3px; }
+  .mcell { border-radius: 5px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; border: 2px solid transparent; }
+  .mcell:hover, .mcell.active { transform: scale(1.1); box-shadow: 0 2px 12px rgba(0,0,0,0.5); z-index: 2; border-color: #fff; }
+  .mcell.dimmed { opacity: 0.18; }
+  .mcols { display: grid; grid-template-columns: repeat(3, 50px); gap: 3px; margin-top: 6px; }
+  .mcols div { font-size: 10px; color: var(--text-dim); text-align: center; font-weight: 500; }
+  .mxaxis { display: flex; justify-content: center; margin-top: 4px; font-size: 9px; color: var(--text-dim); }
+
+  .thresholds { font-size: 10px; color: var(--text-dim); line-height: 1.7; padding-top: 10px; border-top: 1px solid var(--border); }
+  .thresholds span { color: var(--text); font-weight: 600; }
+
+  .toggle-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-dim);
+    cursor: pointer; user-select: none;
+    padding: 10px 0 0;
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .toggle-row input { accent-color: #6c8aec; width: 15px; height: 15px; cursor: pointer; }
+
+  /* ═══ Bottom panel — category cards ═══ */
+  #bottom-panel {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50000;
+    background: var(--surface2);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    padding: 16px 28px;
+    display: none;
+  }
+  .cgrid {
+    max-width: 1400px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+  }
+  .ccard {
+    padding: 14px 16px; border-radius: 10px; cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .ccard:hover, .ccard.active { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
+
+  .ccard-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ccard-sw { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.08); }
+  .ccard-title { font-size: 13px; font-weight: 600; color: var(--text-bright); }
+  .ccard-pop { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: var(--text-bright); line-height: 1; margin-bottom: 4px; }
+  .ccard-tracts { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+  .ccard-note { font-size: 11px; color: var(--text-dim); font-style: italic; line-height: 1.3; }
+
+  /* Tooltip */
+  .tract-tooltip {
+    background: var(--surface) !important;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border) !important; border-radius: 10px !important;
+    padding: 14px 16px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+    color: var(--text) !important; font-family: 'DM Sans', sans-serif !important;
+    font-size: 12px !important; line-height: 1.6 !important;
+  }
+  .tt-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .tt-row { display: flex; justify-content: space-between; gap: 20px; }
+  .tt-label { color: var(--text-dim); }
+  .tt-val { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .tt-badge { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+
+  .leaflet-container { background: var(--bg) !important; }
+  .leaflet-control-zoom { border: 1px solid var(--border) !important; }
+  .leaflet-control-zoom a { background: var(--surface) !important; color: var(--text) !important; border-color: var(--border) !important; }
+  .leaflet-control-zoom a:hover { background: var(--surface2) !important; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <h2>Loading Census Tracts</h2>
+  <div id="load-status">Fetching data...</div>
+</div>
+
+<div id="map"></div>
+
+<!-- Left: matrix legend -->
+<div id="left-panel">
+  <h1>PCI Access by Census Tract</h1>
+  <div class="sub">Population density × estimated drive time to nearest PCI-capable hospital</div>
+  <div class="mlabel">Color legend — hover to filter</div>
+  <div class="mouter">
+    <div class="myaxis">← Dense &nbsp; Population &nbsp; Sparse →</div>
+    <div class="mrows"><div>Dense</div><div>Moderate</div><div>Sparse</div></div>
+    <div>
+      <div class="mgrid" id="mgrid"></div>
+      <div class="mcols"><div>&gt;90 min</div><div>30–90</div><div>&lt;30 min</div></div>
+      <div class="mxaxis">— Drive time to PCI →</div>
+    </div>
+  </div>
+  <div class="thresholds">
+    Sparse: <span>&lt; 500</span> / sq mi<br>
+    Moderate: <span>500 – 5,000</span><br>
+    Dense: <span>&gt; 5,000</span>
+  </div>
+  <label class="toggle-row">
+    <input type="checkbox" id="toggle-hospitals"> Show PCI hospitals (1,248)
+  </label>
+</div>
+
+<!-- Bottom: category cards -->
+<div id="bottom-panel">
+  <div class="cgrid" id="cgrid"></div>
+</div>
+
+<script>
+const COLORS = {
+  8:'#6b2c2e', 7:'#5b7baa', 6:'#3a9e6e',
+  5:'#d47e6a', 4:'#c9b87a', 3:'#7ec9a0',
+  2:'#d4a8a0', 1:'#d5cba0', 0:'#a8ddc0',
+};
+const GRID = [[8,7,6],[5,4,3],[2,1,0]];
+const DL = ['Sparse','Moderate','Dense'];
+const TL = ['< 30 min','30–90 min','> 90 min'];
+const CATS = [
+  {c:6, title:'Dense · <30 min',      note:'Urban core, strong access'},
+  {c:3, title:'Moderate · <30 min',   note:'Suburban, well-served'},
+  {c:1, title:'Sparse · 30–90 min',   note:'Rural, within transfer window'},
+  {c:4, title:'Moderate · 30–90 min', note:'Suburban fringe'},
+  {c:2, title:'Sparse · >90 min',     note:'Rural — pharmaco-invasive territory'},
+  {c:5, title:'Moderate · >90 min',   note:'Suburban gap — policy target'},
+];
+
+// Build matrix
+const mg = document.getElementById('mgrid');
+GRID.flat().forEach(id => {
+  const c = document.createElement('div');
+  c.className = 'mcell'; c.style.background = COLORS[id]; c.dataset.cid = id;
+  c.addEventListener('mouseenter', () => hl(id));
+  c.addEventListener('mouseleave', clr);
+  mg.appendChild(c);
+});
+
+// Build cards
+const cg = document.getElementById('cgrid');
+CATS.forEach(cat => {
+  const d = document.createElement('div');
+  d.className = 'ccard'; d.dataset.cid = cat.c;
+  d.innerHTML = `
+    <div class="ccard-top"><div class="ccard-sw" style="background:${COLORS[cat.c]}"></div><div class="ccard-title">${cat.title}</div></div>
+    <div class="ccard-pop" id="cp-${cat.c}">—</div>
+    <div class="ccard-tracts" id="ct-${cat.c}"></div>
+    <div class="ccard-note">${cat.note}</div>`;
+  d.addEventListener('mouseenter', () => hl(cat.c));
+  d.addEventListener('mouseleave', clr);
+  cg.appendChild(d);
+});
+
+// Map
+const map = L.map('map', {center:[39.5,-98.5], zoom:5, preferCanvas:true, renderer:L.canvas()});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(map);
+const lp = map.createPane('labels'); lp.style.zIndex=650; lp.style.pointerEvents='none';
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:18,pane:'labels'}).addTo(map);
+
+let tl = null, ac = null;
+
+function fs(f) {
+  const c = f.properties.c, z = map.getZoom(), sb = z >= 9, on = ac===null||ac===c;
+  return { fillColor:COLORS[c], fillOpacity:on?0.78:0.06, weight:sb?(z>=11?0.8:0.3):0, color:sb?'rgba(255,255,255,0.1)':'transparent', opacity:on?1:0.05 };
+}
+map.on('zoomend', () => { if(tl) tl.setStyle(fs); });
+
+function hl(id) {
+  ac = id; if(tl) tl.setStyle(fs);
+  document.querySelectorAll('.mcell').forEach(e => { const i=parseInt(e.dataset.cid); e.classList.toggle('active',i===id); e.classList.toggle('dimmed',i!==id); });
+  document.querySelectorAll('.ccard').forEach(e => e.classList.toggle('active',parseInt(e.dataset.cid)===id));
+}
+function clr() {
+  ac = null; if(tl) tl.setStyle(fs);
+  document.querySelectorAll('.mcell').forEach(e => e.classList.remove('active','dimmed'));
+  document.querySelectorAll('.ccard').forEach(e => e.classList.remove('active'));
+}
+
+function fp(n) { return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?Math.round(n/1e3).toLocaleString()+'K':String(n); }
+
+async function go() {
+  const st = document.getElementById('load-status');
+  try {
+    st.textContent = 'Downloading tract boundaries...';
+    const r = await fetch('tracts_topo_bivar.json');
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    st.textContent = 'Parsing TopoJSON...';
+    const topo = await r.json();
+    st.textContent = 'Converting geometries...';
+    await new Promise(r=>setTimeout(r,50));
+    const gj = topojson.feature(topo, topo.objects.tracts);
+    st.textContent = 'Rendering '+gj.features.length.toLocaleString()+' tracts...';
+    await new Promise(r=>setTimeout(r,50));
+
+    const cn={}, pp={};
+    for(let i=0;i<9;i++){cn[i]=0;pp[i]=0;}
+    gj.features.forEach(f=>{cn[f.properties.c]++;pp[f.properties.c]+=f.properties.p||0;});
+    CATS.forEach(cat=>{
+      const pe=document.getElementById('cp-'+cat.c), te=document.getElementById('ct-'+cat.c);
+      if(pe) pe.textContent=fp(pp[cat.c])+' people';
+      if(te) te.textContent=cn[cat.c].toLocaleString()+' tracts';
+    });
+
+    tl = L.geoJSON(gj, {
+      renderer: L.canvas({padding:0.5}), style: fs, interactive: true,
+      onEachFeature: (f, layer) => {
+        const p=f.properties, dc=Math.floor(p.c/3), tc=p.c%3;
+        layer.bindTooltip(`
+          <div class="tt-title">Tract ${p.g}</div>
+          <div class="tt-row"><span class="tt-label">Population</span><span class="tt-val">${(p.p||0).toLocaleString()}</span></div>
+          <div class="tt-row"><span class="tt-label">Density</span><span class="tt-val">${(p.n||0).toLocaleString()} / sq mi</span></div>
+          <div class="tt-row"><span class="tt-label">Nearest PCI</span><span class="tt-val">${p.h}</span></div>
+          <div class="tt-row"><span class="tt-label">Distance</span><span class="tt-val">${p.d} mi</span></div>
+          <div class="tt-row"><span class="tt-label">Est. Drive</span><span class="tt-val">${p.t} min</span></div>
+          <div><span class="tt-badge" style="background:${COLORS[p.c]};color:#fff">${DL[dc]} · ${TL[tc]}</span></div>
+        `, {className:'tract-tooltip',sticky:true,direction:'top',offset:[0,-10]});
+        layer.on('mouseover', function(){this.setStyle({weight:1.5,color:'#fff',fillOpacity:0.95});this.bringToFront();});
+        layer.on('mouseout', function(){tl.resetStyle(this);});
+      },
+    }).addTo(map);
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('left-panel').style.display = 'block';
+    document.getElementById('bottom-panel').style.display = 'block';
+  } catch(e) { st.textContent='Error: '+e.message; console.error(e); }
+}
+
+// Hospital markers
+let hospLayer = null;
+document.getElementById('toggle-hospitals').addEventListener('change', async function() {
+  if (this.checked) {
+    if (!hospLayer) {
+      try {
+        const r = await fetch('hospitals.json');
+        const data = await r.json();
+        hospLayer = L.layerGroup();
+        data.forEach(([lat, lon, name]) => {
+          L.circleMarker([lat, lon], {
+            radius: 4, fillColor: '#ff4d6a', fillOpacity: 0.9,
+            weight: 1.2, color: '#fff', opacity: 0.6,
+          }).bindTooltip(name, {
+            className: 'tract-tooltip', direction: 'top', offset: [0, -8],
+          }).addTo(hospLayer);
+        });
+      } catch(e) { console.error('Could not load hospitals.json', e); return; }
+    }
+    hospLayer.addTo(map);
+  } else {
+    if (hospLayer) map.removeLayer(hospLayer);
+  }
+});
+
+go();
+</script>
+</body>
+</html>
