@@ -34,9 +34,6 @@
   #map-container { flex: 1; position: relative; }
   #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
 
-  /* Reserve space at bottom when panel is visible */
-  body.panel-open #map-container { margin-bottom: 180px; }
-
   /* ── Loading ── */
   #loading {
     position: absolute; inset: 0; z-index: 2000; background: var(--bg);
@@ -55,14 +52,16 @@
 
   /* ── Bottom panel ── */
   #bottom-panel {
-    position: fixed;
+    position: absolute;
     bottom: 0; left: 0; right: 0;
     background: var(--surface2);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border);
     padding: 20px 32px;
-    display: none;
     z-index: 1000;
   }
+  #bottom-panel.hidden { display: none; }
 
   .panel-inner {
     max-width: 1200px;
@@ -199,9 +198,9 @@
   <div id="load-status">Fetching data...</div>
 </div>
 
-<div id="map-container"><div id="map"></div></div>
-
-<div id="bottom-panel">
+<div id="map-container">
+  <div id="map"></div>
+  <div id="bottom-panel" class="hidden">
   <div class="panel-inner">
     <div class="matrix-section">
       <div class="matrix-header">Hover any cell to highlight tracts</div>
@@ -229,6 +228,7 @@
       <div class="cat-grid" id="cat-grid"></div>
     </div>
   </div>
+</div>
 </div>
 
 <script>
@@ -423,8 +423,7 @@ async function loadData() {
     }).addTo(map);
 
     document.getElementById('loading').classList.add('hidden');
-    document.getElementById('bottom-panel').style.display = '';
-    document.body.classList.add('panel-open');
+    document.getElementById('bottom-panel').classList.remove('hidden');
     map.invalidateSize();
 
   } catch (err) {
