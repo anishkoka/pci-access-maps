@@ -198,19 +198,7 @@ Promise.all([
   // Color each feature
   // Debug: check a sample of IDs
   const sampleFeature = tractFeatures.features[0];
-  const _sampleGeoid = String(sampleFeature.id).padStart(11,'0');
-  const _sampleDat = lookup[_sampleGeoid];
-  console.log('Sample feature id:', sampleFeature.id, 'type:', typeof sampleFeature.id);
-  console.log('Padded:', _sampleGeoid);
-  console.log('In lookup?', !!_sampleDat);
-  console.log('Bivar value:', _sampleDat ? _sampleDat.bivar : 'N/A');
-  console.log('Expected color:', _sampleDat ? BIVAR_COLORS[_sampleDat.bivar] : 'N/A');
-  console.log('Lookup sample keys:', Object.keys(lookup).slice(0,3));
-  // Check a few more
-  const _allBivars = Object.values(lookup).map(d=>d.bivar);
-  const _bivarCounts = {};
-  _allBivars.forEach(b=>{ _bivarCounts[b]=(_bivarCounts[b]||0)+1; });
-  console.log('Bivar distribution in lookup:', _bivarCounts);
+
 
   const colorOf = d => {
     const geoid = String(d.id).padStart(11,'0');
@@ -219,6 +207,14 @@ Promise.all([
   };
 
   // Draw tracts — no individual mouse events, use quadtree instead
+  // Debug projection
+  const testFeature = tractFeatures.features[0];
+  const testPath = path(testFeature);
+  console.log('Test path (first 100 chars):', testPath ? testPath.slice(0,100) : 'NULL');
+  console.log('Projection scale:', projection.scale());
+  console.log('Projection translate:', projection.translate());
+  console.log('Number of features:', tractFeatures.features.length);
+
   const tractPaths = gTracts.selectAll('path')
     .data(tractFeatures.features)
     .join('path')
