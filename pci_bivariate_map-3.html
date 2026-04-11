@@ -141,7 +141,7 @@
 <!-- Left: matrix legend -->
 <div id="left-panel">
   <h1>PCI Access by Census Tract</h1>
-  <div class="sub">Population density × estimated drive time to nearest PCI-capable hospital</div>
+  <div class="sub">Population density × estimated prehospital time to nearest PCI-capable hospital (Nallamothu formula)</div>
   <div class="mlabel">Color legend — hover to filter</div>
   <div class="mouter">
     <div class="myaxis">← Dense &nbsp; Population &nbsp; Sparse →</div>
@@ -149,7 +149,7 @@
     <div>
       <div class="mgrid" id="mgrid"></div>
       <div class="mcols"><div>&gt;90 min</div><div>30–90</div><div>&lt;30 min</div></div>
-      <div class="mxaxis">— Drive time to PCI →</div>
+      <div class="mxaxis">— Prehospital time to PCI →</div>
     </div>
   </div>
   <div class="thresholds">
@@ -271,7 +271,7 @@ async function go() {
           <div class="tt-row"><span class="tt-label">Density</span><span class="tt-val">${(p.n||0).toLocaleString()} / sq mi</span></div>
           <div class="tt-row"><span class="tt-label">Nearest PCI</span><span class="tt-val">${p.h}</span></div>
           <div class="tt-row"><span class="tt-label">Distance</span><span class="tt-val">${p.d} mi</span></div>
-          <div class="tt-row"><span class="tt-label">Est. Drive</span><span class="tt-val">${p.t} min</span></div>
+          <div class="tt-row"><span class="tt-label">Est. Prehospital</span><span class="tt-val">${p.pt} min</span></div>
           <div><span class="tt-badge" style="background:${COLORS[p.c]};color:#fff">${DL[dc]} · ${TL[tc]}</span></div>
         `, {className:'tract-tooltip',sticky:true,direction:'top',offset:[0,-10]});
         layer.on('mouseover', function(){this.setStyle({weight:1.5,color:'#fff',fillOpacity:0.95});this.bringToFront();});
