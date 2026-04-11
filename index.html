@@ -339,7 +339,7 @@
     </div>
   </a>
 
-  <!-- US Population-Weighted Centroid -->
+  <!-- US Population-Weighted Centroid (county level) -->
   <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_bivariate_map.html">
     <span class="card-flag flag-standard">Choropleth</span>
     <div class="card-preview preview-us">
@@ -362,22 +362,45 @@
     </div>
   </a>
 
-  <!-- US Census Tract Bivariate -->
-  <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_bivariate_map-3.html">
+  <!-- US Estimated Drive Time (bivariate, census tracts) -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_bivariate_map.html">
     <span class="card-flag flag-bivariate">Bivariate</span>
     <div class="card-preview preview-us">
       <div class="preview-dots"></div>
       <div class="preview-label">United States</div>
       <div class="preview-bivar-swatch">
-        <div class="swatch" style="background:#e05c2a"></div>
-        <div class="swatch" style="background:#c4528a"></div>
-        <div class="swatch" style="background:#3b82f6"></div>
+        <div class="swatch" style="background:#a8ddc0"></div>
+        <div class="swatch" style="background:#c9b87a"></div>
+        <div class="swatch" style="background:#6b2c2e"></div>
       </div>
     </div>
     <div class="card-body">
-      <div class="card-country">United States · Census Tracts</div>
-      <div class="card-title">Bivariate Choropleth by Census Tract</div>
-      <div class="card-desc">PCI access mapped at the census tract level, combining drive time and population density into a single bivariate color scheme for sub-county granularity.</div>
+      <div class="card-country">United States · 84,114 Census Tracts</div>
+      <div class="card-title">Estimated Drive Time</div>
+      <div class="card-desc">Road-adjusted drive time from population-weighted tract centroids (50 mph urban / 40 mph rural). Does not include dispatch, scene time, or round-trip ambulance factor. 98% within 90 minutes.</div>
+      <div class="card-arrow">
+        Open map
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- US Nallamothu Prehospital Time (bivariate, census tracts) -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/pci_bivariate_map_nallamothu.html">
+    <span class="card-flag flag-bivariate">Bivariate</span>
+    <div class="card-preview preview-us">
+      <div class="preview-dots"></div>
+      <div class="preview-label">United States</div>
+      <div class="preview-bivar-swatch">
+        <div class="swatch" style="background:#a8ddc0"></div>
+        <div class="swatch" style="background:#c9b87a"></div>
+        <div class="swatch" style="background:#6b2c2e"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-country">United States · 84,114 Census Tracts</div>
+      <div class="card-title">Nallamothu Prehospital Time</div>
+      <div class="card-desc">Total prehospital time per Nallamothu (Circulation 2006): dispatch + round-trip drive + scene time. Includes the full interval from 911 call to hospital arrival. 91.6% within 90 minutes.</div>
       <div class="card-arrow">
         Open map
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -404,7 +427,7 @@
       </div>
     </div>
     <div class="card-body">
-      <div class="card-country">Canada · 282 Census Divisions</div>
+      <div class="card-country">Canada · 293 Census Divisions</div>
       <div class="card-title">Geometric Centroids</div>
       <div class="card-desc">Drive time from the geographic midpoint of each census division. Uses geometric centroids for all regions — the naive approach, shown for contrast.</div>
       <div class="card-arrow">
@@ -427,9 +450,9 @@
       </div>
     </div>
     <div class="card-body">
-      <div class="card-country">Canada · 282 Census Divisions</div>
+      <div class="card-country">Canada · 293 Census Divisions</div>
       <div class="card-title">Population-Weighted Centroids</div>
-      <div class="card-desc">Drive time from population-weighted centroids for major urban census divisions. 28.7% of Canadians live beyond 90 minutes of PCI — vs. 3.5% in the U.S.</div>
+      <div class="card-desc">Prehospital time from population-weighted centroids using Nallamothu formula. 24.5% of Canadians live beyond 90 minutes of PCI.</div>
       <div class="card-arrow">
         Open map
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>

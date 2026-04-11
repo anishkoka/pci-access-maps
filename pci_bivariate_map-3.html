@@ -141,7 +141,7 @@
 <!-- Left: matrix legend -->
 <div id="left-panel">
   <h1>PCI Access by Census Tract</h1>
-  <div class="sub">Population density × estimated prehospital time to nearest PCI-capable hospital (Nallamothu formula)</div>
+  <div class="sub">Population density × estimated drive time to nearest PCI-capable hospital. Drive time estimated from population-weighted tract centroids using road-adjusted distance (haversine × 1.417) and speed (50 mph urban / 40 mph rural). Does not include dispatch, scene time, or round-trip ambulance factor.</div>
   <div class="mlabel">Color legend — hover to filter</div>
   <div class="mouter">
     <div class="myaxis">← Dense &nbsp; Population &nbsp; Sparse →</div>
@@ -149,7 +149,7 @@
     <div>
       <div class="mgrid" id="mgrid"></div>
       <div class="mcols"><div>&gt;90 min</div><div>30–90</div><div>&lt;30 min</div></div>
-      <div class="mxaxis">— Prehospital time to PCI →</div>
+      <div class="mxaxis">— Drive time to PCI →</div>
     </div>
   </div>
   <div class="thresholds">
@@ -220,7 +220,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.p
 let tl = null, ac = null;
 
 function fs(f) {
-  const c = f.properties.c, z = map.getZoom(), sb = z >= 9, on = ac===null||ac===c;
+  const c = f.properties.ct, z = map.getZoom(), sb = z >= 9, on = ac===null||ac===c;
   return { fillColor:COLORS[c], fillOpacity:on?0.78:0.06, weight:sb?(z>=11?0.8:0.3):0, color:sb?'rgba(255,255,255,0.1)':'transparent', opacity:on?1:0.05 };
 }
 map.on('zoomend', () => { if(tl) tl.setStyle(fs); });
@@ -254,7 +254,7 @@ async function go() {
 
     const cn={}, pp={};
     for(let i=0;i<9;i++){cn[i]=0;pp[i]=0;}
-    gj.features.forEach(f=>{cn[f.properties.c]++;pp[f.properties.c]+=f.properties.p||0;});
+    gj.features.forEach(f=>{cn[f.properties.ct]++;pp[f.properties.ct]+=f.properties.p||0;});
     CATS.forEach(cat=>{
       const pe=document.getElementById('cp-'+cat.c), te=document.getElementById('ct-'+cat.c);
       if(pe) pe.textContent=fp(pp[cat.c])+' people';
@@ -264,15 +264,15 @@ async function go() {
     tl = L.geoJSON(gj, {
       renderer: L.canvas({padding:0.5}), style: fs, interactive: true,
       onEachFeature: (f, layer) => {
-        const p=f.properties, dc=Math.floor(p.c/3), tc=p.c%3;
+        const p=f.properties, dc=Math.floor(p.ct/3), tc=p.ct%3;
         layer.bindTooltip(`
           <div class="tt-title">Tract ${p.g}</div>
           <div class="tt-row"><span class="tt-label">Population</span><span class="tt-val">${(p.p||0).toLocaleString()}</span></div>
           <div class="tt-row"><span class="tt-label">Density</span><span class="tt-val">${(p.n||0).toLocaleString()} / sq mi</span></div>
           <div class="tt-row"><span class="tt-label">Nearest PCI</span><span class="tt-val">${p.h}</span></div>
           <div class="tt-row"><span class="tt-label">Distance</span><span class="tt-val">${p.d} mi</span></div>
-          <div class="tt-row"><span class="tt-label">Est. Prehospital</span><span class="tt-val">${p.pt} min</span></div>
-          <div><span class="tt-badge" style="background:${COLORS[p.c]};color:#fff">${DL[dc]} · ${TL[tc]}</span></div>
+          <div class="tt-row"><span class="tt-label">Est. Drive</span><span class="tt-val">${p.t} min</span></div>
+          <div><span class="tt-badge" style="background:${COLORS[p.ct]};color:#fff">${DL[dc]} · ${TL[tc]}</span></div>
         `, {className:'tract-tooltip',sticky:true,direction:'top',offset:[0,-10]});
         layer.on('mouseover', function(){this.setStyle({weight:1.5,color:'#fff',fillOpacity:0.95});this.bringToFront();});
         layer.on('mouseout', function(){tl.resetStyle(this);});
