@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Methods & Data Sources — PCI Access Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #21262d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #e05c2a;
+  --accent2: #3b82f6;
+  --gold: #d4a843;
+}
+
+html { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+body { min-height: 100vh; padding: 0; overflow-x: hidden; }
+
+/* — Header — */
+header {
+  padding: 72px 48px 56px;
+  max-width: 820px;
+  margin: 0 auto;
+}
+.eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--accent);
+}
+h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+h1 em { font-style: italic; color: var(--gold); }
+.subtitle {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 600px;
+}
+
+/* — Main content — */
+.content {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 48px 80px;
+}
+
+h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--text);
+  margin: 56px 0 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+h2:first-child { border-top: none; margin-top: 0; }
+
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 32px 0 12px;
+  letter-spacing: 0.01em;
+}
+
+p {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--muted);
+  margin-bottom: 16px;
+  font-weight: 300;
+}
+p strong { color: var(--text); font-weight: 500; }
+
+a { color: var(--accent2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* — Lists — */
+ul, ol {
+  margin: 0 0 16px 20px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--muted);
+  font-weight: 300;
+}
+li { margin-bottom: 6px; }
+li strong { color: var(--text); font-weight: 500; }
+
+/* — Blockquote (formula) — */
+blockquote {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  padding: 16px 20px;
+  margin: 16px 0 20px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+/* — Tables — */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 24px;
+  font-size: 13.5px;
+}
+thead th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text);
+  border-bottom: 2px solid var(--border);
+  letter-spacing: 0.02em;
+}
+tbody td {
+  padding: 9px 12px;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: top;
+  line-height: 1.5;
+}
+tbody td:first-child { color: var(--text); font-weight: 500; }
+tbody tr:hover td { background: rgba(255,255,255,0.02); }
+td a { word-break: break-all; }
+
+/* — Section numbers — */
+.sec-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* — Callout box — */
+.callout {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+.callout p { margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* — Reference list — */
+.refs {
+  counter-reset: ref;
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+.refs li {
+  counter-increment: ref;
+  padding-left: 28px;
+  position: relative;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.refs li::before {
+  content: counter(ref) ".";
+  position: absolute;
+  left: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* — Footer — */
+footer {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 32px 48px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-brand {
+  font-family: 'DM Serif Display', serif;
+  font-size: 15px;
+  color: var(--muted);
+}
+.footer-brand span { color: var(--text); }
+.footer-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+/* — Back link — */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 32px;
+}
+.back svg { width: 14px; height: 14px; }
+
+@media (max-width: 720px) {
+  header { padding: 48px 24px 40px; }
+  .content { padding: 0 24px 60px; }
+  footer { padding: 24px; }
+  table { font-size: 12px; }
+  thead th, tbody td { padding: 7px 8px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Koka Cardiology · Technical Companion</div>
+  <h1>Methods &amp; <em>Data Sources</em></h1>
+  <p class="subtitle">Complete methodological documentation for the U.S. and Canadian PCI access analysis. Every data source, formula, and limitation — sufficient to reproduce the analysis from public datasets.</p>
+</header>
+
+<div class="content">
+
+<a class="back" href="https://anishkoka.github.io/pci-access-maps/">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 8H3M7 4L3 8l4 4"/></svg>
+  Back to maps
+</a>
+
+<!-- 1 -->
+<h2><span class="sec-num">01</span>Hospital Identification</h2>
+
+<h3>United States: 1,248 PCI-capable hospitals</h3>
+
+<p>U.S. hospitals with demonstrated PCI capability were identified from <a href="https://data.cms.gov/provider-summary-by-type-of-service/medicare-inpatient-hospitals/medicare-inpatient-hospitals-by-provider-and-service">Medicare inpatient claims data</a> using Diagnosis-Related Group (DRG) codes <strong>246 through 251</strong>, which capture percutaneous cardiovascular procedures with and without drug-eluting stent, with and without major complication or comorbidity.</p>
+
+<p>This billing-based approach differs from the methodology used by <a href="https://pubmed.ncbi.nlm.nih.gov/16490843/">Nallamothu et al. (2006)</a>, who relied on the <a href="https://www.ahadata.com/aha-annual-survey-database">American Hospital Association Annual Survey</a> — a self-report instrument. Billing-based identification captures only hospitals with <em>demonstrated</em> procedural activity, eliminating hospitals that report capability but have discontinued active programs. The tradeoff is that some hospitals serving predominantly non-Medicare populations may be underrepresented, and the method cannot distinguish between hospitals maintaining 24/7 primary PCI capability and those performing only elective PCI during daytime hours.</p>
+
+<p>Each hospital was geocoded to latitude and longitude coordinates using the <a href="https://data.cms.gov/provider-characteristics/hospitals-and-other-facilities/provider-of-services-file-hospital-non-hospital-facilities">Medicare Provider of Services file</a>. Hospitals in U.S. territories were excluded.</p>
+
+<h3>Canada: 41 PCI centers</h3>
+
+<p>Canadian PCI centers were identified through multiple provincial sources because Canada has no single public database analogous to Medicare claims for cardiac procedure activity:</p>
+
+<ul>
+  <li><a href="https://www.cihi.ca/en/indicators/cardiac-care">Canadian Institute for Health Information (CIHI)</a> — Cardiac Care Quality Indicators report</li>
+  <li><a href="https://corhealthontario.ca/">CorHealth Ontario</a> — Ontario's cardiac, stroke, and vascular network</li>
+  <li><a href="https://www.approach.org/">Alberta APPROACH Registry</a> — Alberta Health Services Cardiac Sciences Program</li>
+  <li><a href="http://www.bccardiacregistry.com/">BC Cardiac Registry</a> — British Columbia cardiac services network</li>
+  <li>Provincial equivalents for Quebec, Nova Scotia, Manitoba, and Saskatchewan</li>
+</ul>
+
+<p>This yielded <strong>41 PCI centers</strong>. The count should be understood as the best available approximation from public sources. No PCI-capable hospitals were identified in Prince Edward Island, New Brunswick (though patients may be routed to Nova Scotia), or the three territories.</p>
+
+
+<!-- 2 -->
+<h2><span class="sec-num">02</span>Geographic Units &amp; Population Data</h2>
+
+<h3>United States: 84,114 census tracts</h3>
+
+<p>The geographic unit of analysis is the <strong>census tract</strong>, as defined by the <a href="https://www.census.gov/programs-surveys/decennial-census/decade/2020/2020-census-main.html">2020 U.S. Decennial Census</a>. Census tracts average roughly 4,000 residents and are designed to be relatively homogeneous with respect to population, economic status, and living conditions. They provide substantially greater granularity than the 3,143 U.S. counties, which range from 26 square miles (Arlington County, Virginia) to over 145,000 square miles (North Slope Borough, Alaska).</p>
+
+<p><strong>Population-weighted centroids</strong> for each tract were obtained from the <a href="https://www.census.gov/geographies/reference-files/time-series/geo/centers-population.html">Census Bureau CenPop2020 file</a>, derived from 2020 block-level population data.</p>
+
+<h3>Canada: 293 census divisions</h3>
+
+<p>The geographic unit for Canada is the <strong>census division (CD)</strong>, as defined by <a href="https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/index.cfm?Lang=E">Statistics Canada</a> for the 2021 Census. Census divisions are groups of neighboring municipalities joined together for regional planning. They are substantially larger geographic units than U.S. census tracts, which limits the granularity of the Canadian analysis. The analysis covers all 293 census divisions across 10 provinces and 3 territories, representing a total population of 36,991,981.</p>
+
+<p><strong>Population-weighted centroids</strong> for Canadian census divisions were computed from <a href="https://www150.statcan.gc.ca/n1/en/catalogue/92-151-X">Statistics Canada's Geographic Attribute File (GAF)</a>, which provides dissemination block–level population and representative point coordinates. For each census division:</p>
+
+<blockquote>
+Centroid_lat = Σ(block_lat × block_pop) / Σ(block_pop)<br>
+Centroid_lon = Σ(block_lon × block_pop) / Σ(block_pop)
+</blockquote>
+
+<p>This was computed across 384,286 dissemination blocks from the 2021 Census. The approach places the representative point where people actually live rather than at the geographic center — a distinction that matters enormously for large northern divisions where the geometric center may lie hundreds of miles from the nearest settlement.</p>
+
+
+<!-- 3 -->
+<h2><span class="sec-num">03</span>Why Population-Weighted Centroids Matter</h2>
+
+<div class="callout">
+  <p><strong>Example: Washoe County, Nevada.</strong> Home to Reno and two PCI hospitals. Geometric centroid: 43.5 miles from the nearest cath lab, in a stretch of desert where essentially no one lives. Population-weighted centroid: 3.8 miles from <a href="https://www.renown.org/">Renown Regional Medical Center</a>, reflecting that virtually the entire county population lives in Reno.</p>
+  <p>An analysis using geometric centroids would classify Washoe County's 486,000 residents as underserved. Population-weighted centroids correctly classify them as well-served.</p>
+</div>
+
+<p>Analyses relying on geometric centroids systematically overestimate drive times for large, sparsely populated units, and thereby risk overstating the rural access problem at exactly the geographic scale where it appears most alarming.</p>
+
+
+<!-- 4 -->
+<h2><span class="sec-num">04</span>The Nallamothu Prehospital Formula</h2>
+
+<p>Drive times alone do not capture total prehospital time. A STEMI patient's clock starts when they call 911, not when an ambulance reaches the highway. The prehospital time formula developed by <a href="https://pubmed.ncbi.nlm.nih.gov/16490843/">Nallamothu et al. (2006)</a> accounts for the full sequence: ambulance dispatch, drive to the patient, on-scene time, and drive to the hospital.</p>
+
+<h3>Urban formula (density above threshold)</h3>
+<blockquote>
+Prehospital time = 1.4 min (dispatch) + drive time × 1.6 (round-trip factor) + 8 min (scene)<br><br>
+Drive time = (straight-line distance × 1.417 road factor) / 35 mph × 60 min/hr
+</blockquote>
+
+<h3>Rural formula (density below threshold)</h3>
+<blockquote>
+Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 9 min (scene)<br><br>
+Drive time = (straight-line distance × 1.417 road factor) / 55 mph × 60 min/hr
+</blockquote>
+
+<h3>Component breakdown</h3>
+
+<table>
+  <thead><tr><th>Component</th><th>Value</th><th>Explanation</th></tr></thead>
+  <tbody>
+    <tr><td>Straight-line distance</td><td>Haversine (miles)</td><td>Great-circle distance from population-weighted centroid to nearest PCI hospital</td></tr>
+    <tr><td>Road factor</td><td>1.417×</td><td>Empirical multiplier converting straight-line to estimated road distance</td></tr>
+    <tr><td>Urban speed</td><td>35 mph</td><td>Average ambulance speed reflecting urban traffic and road conditions</td></tr>
+    <tr><td>Rural speed</td><td>55 mph</td><td>Average ambulance speed on rural highways</td></tr>
+    <tr><td>Round-trip factor</td><td>1.6× (urban) / 1.4× (rural)</td><td>Ambulance drives to the patient first, then to the hospital — not a single one-way trip</td></tr>
+    <tr><td>Dispatch time</td><td>1.4 min (urban) / 2.9 min (rural)</td><td>Time from 911 call to ambulance departure</td></tr>
+    <tr><td>Scene time</td><td>8 min (urban) / 9 min (rural)</td><td>Time spent with the patient on scene before transport</td></tr>
+  </tbody>
+</table>
+
+<h3>Urban/rural classification threshold</h3>
+
+<p>For the U.S., the urban formula is applied to census tracts with density &gt; 5,000 persons/sq mi. For Canada, the threshold is &gt; 213 persons/sq mi (Canada's dense tier). This means some Canadian census divisions that are primarily highway-connected receive urban speed parameters (35 mph) when the actual intercity driving speed would be higher — a conservative bias discussed in the limitations.</p>
+
+<h3>Prehospital time bands</h3>
+
+<table>
+  <thead><tr><th>Band</th><th>Threshold</th><th>Clinical interpretation</th></tr></thead>
+  <tbody>
+    <tr><td>&lt; 30 minutes</td><td>Timely access</td><td>Well within the <a href="https://www.ahajournals.org/doi/10.1161/CIR.0000000000001123">ACC/AHA guideline</a> target of 90 min first-medical-contact-to-device</td></tr>
+    <tr><td>30–90 minutes</td><td>Transfer window</td><td>Suboptimal but within guideline window for transferred patients if networks are optimized</td></tr>
+    <tr><td>&gt; 90 minutes</td><td>Beyond guideline</td><td>Primary PCI cannot be delivered within evidence-supported time windows; candidates for <a href="https://www.jacc.org/doi/10.1016/j.jacc.2017.10.085">pharmacoinvasive strategy</a></td></tr>
+  </tbody>
+</table>
+
+
+<!-- 5 -->
+<h2><span class="sec-num">05</span>Bivariate Classification</h2>
+
+<p>Each geographic unit was assigned to one of nine mutually exclusive categories defined by the intersection of prehospital time band and population density tier.</p>
+
+<h3>Density thresholds</h3>
+
+<table>
+  <thead><tr><th>Country</th><th>Sparse</th><th>Moderate</th><th>Dense</th></tr></thead>
+  <tbody>
+    <tr><td>United States</td><td>&lt; 500/sq mi</td><td>500–5,000/sq mi</td><td>&gt; 5,000/sq mi</td></tr>
+    <tr><td>Canada</td><td>&lt; 17/sq mi</td><td>17–213/sq mi</td><td>&gt; 213/sq mi</td></tr>
+  </tbody>
+</table>
+
+<p>Canada-specific thresholds were necessary because Canada's overall settlement density is sufficiently low that applying U.S. thresholds would collapse nearly all Canadian census divisions into the sparse category. Canada's 90th-percentile density (213/sq mi) falls <em>below</em> the U.S. sparse threshold of 500/sq mi (the U.S. 30th percentile). When comparing the &gt;90-minute populations across countries, Canadian census divisions are reclassified using U.S. density thresholds to enable meaningful cross-national comparison.</p>
+
+<h3>The 3×3 matrix — policy interpretation</h3>
+
+<table>
+  <thead><tr><th></th><th>&gt;90 min</th><th>30–90 min</th><th>&lt;30 min</th></tr></thead>
+  <tbody>
+    <tr><td>Dense</td><td>Geographic anomalies (US); infrastructure gap (CA)</td><td>Urban fringe</td><td>Urban core — well served</td></tr>
+    <tr><td>Moderate</td><td>Policy target for PCI expansion</td><td>Suburban fringe — transfer networks</td><td>Suburban — well served</td></tr>
+    <tr><td>Sparse</td><td>Pharmacoinvasive territory</td><td>Rural — within transfer window</td><td>Rural — near existing PCI</td></tr>
+  </tbody>
+</table>
+
+
+<!-- 6 -->
+<h2><span class="sec-num">06</span>Key Results (Updated)</h2>
+
+<h3>United States — 84,114 census tracts, 335 million people</h3>
+
+<table>
+  <thead><tr><th>Band</th><th>Population</th><th>Share</th></tr></thead>
+  <tbody>
+    <tr><td>&lt; 30 min</td><td>259M</td><td>79%</td></tr>
+    <tr><td>30–90 min</td><td>62.3M</td><td>19%</td></tr>
+    <tr><td>&gt; 90 min</td><td>6.4M</td><td>2.0%</td></tr>
+  </tbody>
+</table>
+
+<p>The 6.4 million beyond 90 minutes: <strong>4.7M sparse</strong> (1.4%), <strong>1.6M moderate</strong> (0.5%), <strong>108K dense</strong> (&lt;0.1% — geographic anomalies: Hawaii, Florida Keys, Missoula corridor).</p>
+
+<h3>Canada — 293 census divisions, 37 million people</h3>
+
+<table>
+  <thead><tr><th>Band</th><th>Population</th><th>Share</th></tr></thead>
+  <tbody>
+    <tr><td>&lt; 30 min</td><td>18.9M</td><td>51.0%</td></tr>
+    <tr><td>30–90 min</td><td>9.1M</td><td>24.5%</td></tr>
+    <tr><td>&gt; 90 min</td><td>9.1M</td><td>24.5%</td></tr>
+  </tbody>
+</table>
+
+<p>The 9.1 million beyond 90 minutes: <strong>4.1M sparse</strong> (11.0%), <strong>3.7M moderate</strong> (9.9%), <strong>1.3M dense</strong> (3.5% — 11 census divisions including Francheville/Trois-Rivières, Sherbrooke, and Nanaimo).</p>
+
+<div class="callout">
+  <p><strong>Per-capita gap: ~13× worse in Canada.</strong></p>
+  <p>By U.S. density classification, 96.5% of Canadians beyond 90 minutes would be classified as U.S.-sparse (&lt; 500/sq mi) and 3.5% as U.S.-moderate. None would reach U.S.-dense. Canada's densest unserved communities do not reach the density at which the U.S. begins classifying areas as <em>rural</em>.</p>
+</div>
+
+
+<!-- 7 -->
+<h2><span class="sec-num">07</span>Limitations</h2>
+
+<p><strong>Drive time estimation.</strong> Prehospital times are estimates derived from straight-line distance with empirical correction factors, not real-time routing. They do not account for traffic congestion, seasonal road conditions (particularly relevant in northern Canada), road closures, or EMS-specific routing.</p>
+
+<p><strong>Urban speed assignment for Canada.</strong> The Nallamothu formula assigns urban speed parameters (35 mph) to census divisions above Canada's dense threshold (&gt; 213/sq mi). For intercity highway drives — such as Trois-Rivières to Quebec City (66 straight-line miles of predominantly highway driving) — this likely understates actual travel speed and overstates prehospital time. This bias makes the Canadian numbers conservative: the true access picture is likely somewhat better than reported. We retained the formula as specified rather than introducing ad hoc speed adjustments, accepting that this makes the comparison more generous to Canada, not less.</p>
+
+<p><strong>U.S. hospital identification.</strong> Medicare DRG billing identifies hospitals with demonstrated PCI activity but does not verify 24/7 primary PCI capability. Some identified hospitals may perform only elective daytime PCI, which would overestimate true emergency access for the U.S.</p>
+
+<p><strong>Canadian hospital identification.</strong> The 41-center count relies on multi-source aggregation from provincial cardiac network directories rather than a single standardized administrative dataset. It is the best available approximation from public sources but may miss or double-count facilities.</p>
+
+<p><strong>Geographic granularity mismatch.</strong> U.S. census tracts (~4,000 residents, ~84,000 units) are far more granular than Canadian census divisions (~126,000 residents average, 293 units). The Canadian analysis cannot capture within-division variation — a large census division may contain both a well-served urban core and an underserved rural periphery.</p>
+
+<p><strong>No incidence weighting.</strong> The analysis characterizes access for the general population, not weighted by STEMI incidence. Age, sex, race, and socioeconomic composition vary across density tiers and drive-time bands in ways that affect the expected burden of acute coronary events.</p>
+
+<p><strong>No air transport.</strong> The analysis considers ground transport only. Helicopter EMS can dramatically reduce effective transport times for remote communities.</p>
+
+
+<!-- 8 -->
+<h2><span class="sec-num">08</span>Data Sources</h2>
+
+<table>
+  <thead><tr><th>Source</th><th>URL</th><th>What it provides</th></tr></thead>
+  <tbody>
+    <tr><td>Medicare Inpatient Hospitals by Provider and Service</td><td><a href="https://data.cms.gov/provider-summary-by-type-of-service/medicare-inpatient-hospitals/medicare-inpatient-hospitals-by-provider-and-service">data.cms.gov</a></td><td>DRG 246–251 billing → 1,248 PCI hospitals</td></tr>
+    <tr><td>Medicare Provider of Services File</td><td><a href="https://data.cms.gov/provider-characteristics/hospitals-and-other-facilities/provider-of-services-file-hospital-non-hospital-facilities">data.cms.gov</a></td><td>Hospital geocoding (lat/lon)</td></tr>
+    <tr><td>U.S. Census Bureau, 2020 Census</td><td><a href="https://www.census.gov/programs-surveys/decennial-census/decade/2020/2020-census-main.html">census.gov</a></td><td>Tract population and land area</td></tr>
+    <tr><td>Census Bureau Centers of Population</td><td><a href="https://www.census.gov/geographies/reference-files/time-series/geo/centers-population.html">census.gov</a></td><td>Population-weighted tract centroids</td></tr>
+    <tr><td>Statistics Canada, 2021 Census</td><td><a href="https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/index.cfm?Lang=E">statcan.gc.ca</a></td><td>CD population and land area</td></tr>
+    <tr><td>Statistics Canada GAF</td><td><a href="https://www150.statcan.gc.ca/n1/en/catalogue/92-151-X">statcan.gc.ca</a></td><td>Dissemination block centroids → pop-weighted CD centroids</td></tr>
+    <tr><td>CIHI Cardiac Care Quality Indicators</td><td><a href="https://www.cihi.ca/en/indicators/cardiac-care">cihi.ca</a></td><td>Canadian PCI center identification</td></tr>
+    <tr><td>CorHealth Ontario</td><td><a href="https://corhealthontario.ca/">corhealthontario.ca</a></td><td>Ontario cardiac network</td></tr>
+    <tr><td>Alberta APPROACH Registry</td><td><a href="https://www.approach.org/">approach.org</a></td><td>Alberta cardiac sciences</td></tr>
+    <tr><td>BC Cardiac Registry</td><td><a href="http://www.bccardiacregistry.com/">bccardiacregistry.com</a></td><td>BC cardiac services</td></tr>
+  </tbody>
+</table>
+
+
+<!-- 9 -->
+<h2><span class="sec-num">09</span>References</h2>
+
+<ol class="refs">
+  <li>Nallamothu BK, Bates ER, Wang Y, Bradley EH, Krumholz HM. <a href="https://pubmed.ncbi.nlm.nih.gov/16490843/">Driving times and distances to hospitals with percutaneous coronary intervention in the United States: implications for prehospital triage of patients with ST-elevation myocardial infarction.</a> <em>Circulation.</em> 2006;113(9):1189–1195.</li>
+  <li>O'Gara PT, Kushner FG, Ascheim DD, et al. <a href="https://www.ahajournals.org/doi/10.1161/CIR.0b013e3182742cf6">2013 ACCF/AHA Guideline for the Management of ST-Elevation Myocardial Infarction.</a> <em>Circulation.</em> 2013;127(4):e362–e425.</li>
+  <li>Ibanez B, James S, Agewall S, et al. <a href="https://academic.oup.com/eurheartj/article/39/2/119/4095042">2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation.</a> <em>European Heart Journal.</em> 2018;39(2):119–177.</li>
+  <li>Hsia RY, Shen YC. <a href="https://pubmed.ncbi.nlm.nih.gov/21490162/">Possible geographical barriers to trauma center access for vulnerable patients in the United States.</a> <em>Archives of Surgery.</em> 2011;146(1):46–52.</li>
+  <li>Armstrong PW, Gershlick AH, Goldstein P, et al. <a href="https://www.nejm.org/doi/full/10.1056/NEJMoa1301092">Fibrinolysis or primary PCI in ST-segment elevation myocardial infarction.</a> <em>NEJM.</em> 2013;368(15):1379–1387.</li>
+  <li>Schneider EC, Shah A, Doty MM, et al. <a href="https://www.commonwealthfund.org/publications/fund-reports/2024/sep/mirror-mirror-2024">Mirror, Mirror 2024: A Portrait of the Failing U.S. Health System.</a> Commonwealth Fund. 2024.</li>
+</ol>
+
+
+<!-- 10 -->
+<h2><span class="sec-num">10</span>Interactive Maps &amp; Data</h2>
+
+<p>All maps, data files, and analysis code are available at:</p>
+
+<p style="margin: 20px 0;"><a href="https://anishkoka.github.io/pci-access-maps/" style="font-family: 'DM Mono', monospace; font-size: 14px; color: var(--accent); letter-spacing: 0.02em;">anishkoka.github.io/pci-access-maps →</a></p>
+
+<p>The interactive bivariate maps allow filtering by any of the nine density × drive-time categories, toggling PCI hospital locations, and hovering over individual geographic units for detailed population, density, and prehospital time data.</p>
+
+</div>
+
+<footer>
+  <div class="footer-brand"><span>Koka Cardiology</span> · PCI Access Research</div>
+  <div class="footer-note">Anish Koka, MD · Philadelphia</div>
+</footer>
+
+</body>
+</html>
