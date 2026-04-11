@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Canadian PCI Access</title>
+<title>Canadian PCI Access — Estimated Drive Time</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -72,7 +72,7 @@ h1{font-size:16px;font-weight:700;color:var(--tb);line-height:1.3}
     <div class="lbl">Layers</div>
     <div class="toggle-row"><div class="toggle" id="hosp-toggle"></div><span>PCI Hospitals (41)</span></div>
   </div>
-  <div class="footer"><b>Sources</b><br>Statistics Canada 2021 Census · Provincial cardiac networks<br>Distances from population-weighted centroids · Nallamothu prehospital formula</div>
+  <div class="footer"><b>Sources</b><br>Statistics Canada 2021 Census · Provincial cardiac networks<br>Distances from population-weighted centroids · Estimated drive time (haversine × 1.417, 50/40 mph urban/rural)</div>
 </div>
 <div id="map-wrap">
   <svg id="map-svg" viewBox="0 0 900 700" preserveAspectRatio="xMidYMid meet" style="max-width:100%;max-height:100%"></svg>
@@ -89,7 +89,7 @@ const G=[[8,7,6],[5,4,3],[2,1,0]];
 const DL=['Sparse','Moderate','Dense'],TL=['< 30 min','30–90 min','> 90 min'];
 const BL={};for(let d=0;d<3;d++)for(let t=0;t<3;t++)BL[d*3+t]=DL[d]+' · '+TL[t];
 const tPop=Object.values(DATA).reduce((s,r)=>s+r.p,0);
-const st={};for(let i=0;i<9;i++){const cd=Object.values(DATA).filter(r=>r.b===i);st[i]={n:cd.length,p:cd.reduce((s,r)=>s+r.p,0)};}
+const st={};for(let i=0;i<9;i++){const cd=Object.values(DATA).filter(r=>r.bc===i);st[i]={n:cd.length,p:cd.reduce((s,r)=>s+r.p,0)};}
 let filt=null,hov=null,showH=false;
 
 const mx=document.getElementById('mx');
@@ -102,22 +102,22 @@ G.forEach(row=>row.forEach(bi=>{
 }));
 
 const cards=document.getElementById('cards');
-[{b:[6],t:'Dense · < 30 min',n:'Urban, strong access'},
- {b:[3],t:'Moderate · < 30 min',n:'Suburban coverage'},
- {b:[1],t:'Sparse · 30–90 min',n:'Transfer window'},
- {b:[4],t:'Moderate · 30–90 min',n:'Suburban fringe'},
- {b:[2],t:'Sparse · > 90 min',n:'Pharmaco-invasive territory'},
- {b:[2,5,8],t:'All > 90 min',n:'Beyond guideline'}
+[{bc:[6],t:'Dense · < 30 min',n:'Urban, strong access'},
+ {bc:[3],t:'Moderate · < 30 min',n:'Suburban coverage'},
+ {bc:[1],t:'Sparse · 30–90 min',n:'Transfer window'},
+ {bc:[4],t:'Moderate · 30–90 min',n:'Suburban fringe'},
+ {bc:[2],t:'Sparse · > 90 min',n:'Pharmaco-invasive territory'},
+ {bc:[2,5,8],t:'All > 90 min',n:'Beyond guideline'}
 ].forEach(cat=>{
-  const p=cat.b.reduce((s,b)=>s+st[b].p,0);const n=cat.b.reduce((s,b)=>s+st[b].n,0);
+  const p=cat.bc.reduce((s,b)=>s+st[b].p,0);const n=cat.bc.reduce((s,b)=>s+st[b].n,0);
   const pct=(100*p/tPop).toFixed(1);
-  const cd=document.createElement('div');cd.className='card';cd.dataset.b=JSON.stringify(cat.b);
-  const bg=cat.b.length===1?C[cat.b[0]]:`linear-gradient(135deg,${cat.b.map(b=>C[b])})`;
+  const cd=document.createElement('div');cd.className='card';cd.dataset.b=JSON.stringify(cat.bc);
+  const bg=cat.bc.length===1?C[cat.bc[0]]:`linear-gradient(135deg,${cat.bc.map(b=>C[b])})`;
   cd.innerHTML=`<div class="card-sw" style="background:${bg}"></div><div><div class="card-l">${cat.t}</div><div class="card-n">${cat.n}</div></div><div class="card-s">${n} CDs<br>${p>=1e6?(p/1e6).toFixed(1)+'M':(p/1e3).toFixed(0)+'K'}<br>${pct}%</div>`;
   cd.addEventListener('click',()=>{
-    const key=JSON.stringify(cat.b);
+    const key=JSON.stringify(cat.bc);
     if(filt!==null&&JSON.stringify(typeof filt==='number'?[filt]:filt)===key)filt=null;
-    else filt=cat.b;upd();draw();
+    else filt=cat.bc;upd();draw();
   });
   cards.appendChild(cd);
 });
@@ -134,7 +134,7 @@ mapG.selectAll('.cd').data(feat.features).join('path')
   .attr('class','cd').attr('d',path)
   .each(function(f){
     const id=String(f.id||'');const dat=DATA[id];
-    d3.select(this).attr('data-id',id).attr('data-b',dat?dat.b:-1).attr('fill',dat?C[dat.b]:'#151b25');
+    d3.select(this).attr('data-id',id).attr('data-b',dat?dat.bc:-1).attr('fill',dat?C[dat.bc]:'#151b25');
   });
 
 const hospG=mapG.append('g').attr('class','hosp-layer').attr('display','none');
@@ -181,8 +181,8 @@ svg.on('mousemove',function(e){
     const id=el.getAttribute('data-id'),d=DATA[id];
     if(d){
       tn.textContent=d.n;
-      tr.innerHTML=`<div class="tr"><span class="tr-l">Population</span><span class="tr-v">${d.p.toLocaleString()}</span></div><div class="tr"><span class="tr-l">Density</span><span class="tr-v">${d.d}/mi²</span></div><div class="tr"><span class="tr-l">Distance</span><span class="tr-v">${d.m} mi</span></div><div class="tr"><span class="tr-l">Drive time</span><span class="tr-v">${d.dt} min</span></div>`;
-      tb.textContent=BL[d.b];tb.style.background=C[d.b];tb.style.color=[6,7,8].includes(d.b)?'#fff':'#1a1a1a';
+      tr.innerHTML=`<div class="tr"><span class="tr-l">Population</span><span class="tr-v">${d.p.toLocaleString()}</span></div><div class="tr"><span class="tr-l">Density</span><span class="tr-v">${d.d}/mi²</span></div><div class="tr"><span class="tr-l">Distance</span><span class="tr-v">${d.m} mi</span></div><div class="tr"><span class="tr-l">Est. drive</span><span class="tr-v">${d.et} min</span></div>`;
+      tb.textContent=BL[d.bc];tb.style.background=C[d.bc];tb.style.color=[6,7,8].includes(d.bc)?'#fff':'#1a1a1a';
       tip.style.opacity=1;tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-8)+'px';return;
     }
   }

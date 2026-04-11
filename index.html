@@ -437,22 +437,45 @@
     </div>
   </a>
 
-  <!-- Canada Population-Weighted Centroid -->
-  <a class="card" href="https://anishkoka.github.io/pci-access-maps/canada_pci_bivariate_map.html">
-    <span class="card-flag flag-standard">Choropleth</span>
+  <!-- Canada Estimated Drive Time -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/canada_pci_bivariate_map_drivetime.html">
+    <span class="card-flag flag-bivariate">Bivariate</span>
     <div class="card-preview preview-canada">
       <div class="preview-dots"></div>
       <div class="preview-label">Canada</div>
       <div class="preview-bivar-swatch">
-        <div class="swatch" style="background:#27b567"></div>
-        <div class="swatch" style="background:#d97706"></div>
-        <div class="swatch" style="background:#dc2626"></div>
+        <div class="swatch" style="background:#a8ddc0"></div>
+        <div class="swatch" style="background:#c9b87a"></div>
+        <div class="swatch" style="background:#6b2c2e"></div>
       </div>
     </div>
     <div class="card-body">
       <div class="card-country">Canada · 293 Census Divisions</div>
-      <div class="card-title">Population-Weighted Centroids</div>
-      <div class="card-desc">Prehospital time from population-weighted centroids using Nallamothu formula. 24.5% of Canadians live beyond 90 minutes of PCI.</div>
+      <div class="card-title">Estimated Drive Time</div>
+      <div class="card-desc">Road-adjusted drive time from population-weighted centroids (50 mph urban / 40 mph rural). Same methodology as U.S. primary analysis. 81.2% within 90 minutes.</div>
+      <div class="card-arrow">
+        Open map
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- Canada Nallamothu Prehospital Time -->
+  <a class="card" href="https://anishkoka.github.io/pci-access-maps/canada_pci_bivariate_map.html">
+    <span class="card-flag flag-bivariate">Bivariate</span>
+    <div class="card-preview preview-canada">
+      <div class="preview-dots"></div>
+      <div class="preview-label">Canada</div>
+      <div class="preview-bivar-swatch">
+        <div class="swatch" style="background:#a8ddc0"></div>
+        <div class="swatch" style="background:#c9b87a"></div>
+        <div class="swatch" style="background:#6b2c2e"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-country">Canada · 293 Census Divisions</div>
+      <div class="card-title">Nallamothu Prehospital Time</div>
+      <div class="card-desc">Total prehospital time per Nallamothu (Circulation 2006): dispatch + round-trip drive + scene time. 75.5% within 90 minutes.</div>
       <div class="card-arrow">
         Open map
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
