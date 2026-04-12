@@ -264,7 +264,7 @@ footer {
 
 <h3>United States: 1,248 PCI-capable hospitals</h3>
 
-<p>U.S. hospitals with demonstrated PCI capability were identified from <a href="https://data.cms.gov/provider-summary-by-type-of-service/medicare-inpatient-hospitals/medicare-inpatient-hospitals-by-provider-and-service">Medicare inpatient claims data</a> using Diagnosis-Related Group (DRG) codes <strong>246 through 251</strong>, which capture percutaneous cardiovascular procedures with and without drug-eluting stent, with and without major complication or comorbidity.</p>
+<p>I identified U.S. hospitals with demonstrated PCI capability from <a href="https://data.cms.gov/provider-summary-by-type-of-service/medicare-inpatient-hospitals/medicare-inpatient-hospitals-by-provider-and-service">Medicare inpatient claims data</a> using Diagnosis-Related Group (DRG) codes <strong>246 through 251</strong>, which capture percutaneous cardiovascular procedures with and without drug-eluting stent, with and without major complication or comorbidity.</p>
 
 <p>This billing-based approach differs from the methodology used by <a href="https://pubmed.ncbi.nlm.nih.gov/16490843/">Nallamothu et al. (2006)</a>, who relied on the <a href="https://www.ahadata.com/aha-annual-survey-database">American Hospital Association Annual Survey</a> — a self-report instrument. Billing-based identification captures only hospitals with <em>demonstrated</em> procedural activity, eliminating hospitals that report capability but have discontinued active programs. The tradeoff is that some hospitals serving predominantly non-Medicare populations may be underrepresented, and the method cannot distinguish between hospitals maintaining 24/7 primary PCI capability and those performing only elective PCI during daytime hours.</p>
 
@@ -272,7 +272,7 @@ footer {
 
 <h3>Canada: 41 PCI centers</h3>
 
-<p>Canadian PCI centers were identified through multiple provincial sources because Canada has no single public database analogous to Medicare claims for cardiac procedure activity:</p>
+<p>I identified Canadian PCI centers through multiple provincial sources because Canada has no single public database analogous to Medicare claims for cardiac procedure activity:</p>
 
 <ul>
   <li><a href="https://www.cihi.ca/en/indicators/cardiac-care">Canadian Institute for Health Information (CIHI)</a> — Cardiac Care Quality Indicators report</li>
@@ -282,7 +282,7 @@ footer {
   <li>Provincial equivalents for Quebec, Nova Scotia, Manitoba, and Saskatchewan</li>
 </ul>
 
-<p>This yielded <strong>41 PCI centers</strong>. The count should be understood as the best available approximation from public sources. No PCI-capable hospitals were identified in Prince Edward Island, New Brunswick (though patients may be routed to Nova Scotia), or the three territories.</p>
+<p>This yielded <strong>41 PCI centers</strong>. The count should be understood as the best available approximation from public sources. I found no PCI-capable hospitals in Prince Edward Island, New Brunswick (though patients may be routed to Nova Scotia), or the three territories.</p>
 
 
 <!-- 2 -->
@@ -305,7 +305,7 @@ Centroid_lat = Σ(block_lat × block_pop) / Σ(block_pop)<br>
 Centroid_lon = Σ(block_lon × block_pop) / Σ(block_pop)
 </blockquote>
 
-<p>This was computed across 384,286 dissemination blocks from the 2021 Census. The approach places the representative point where people actually live rather than at the geographic center — a distinction that matters enormously for large northern divisions where the geometric center may lie hundreds of miles from the nearest settlement.</p>
+<p>I computed this across 384,286 dissemination blocks from the 2021 Census. The approach places the representative point where people actually live rather than at the geographic center — a distinction that matters enormously for large northern divisions where the geometric center may lie hundreds of miles from the nearest settlement.</p>
 
 
 <!-- 3 -->
@@ -322,11 +322,11 @@ Centroid_lon = Σ(block_lon × block_pop) / Σ(block_pop)
 <!-- 4 -->
 <h2><span class="sec-num">04</span>Drive Time Estimation</h2>
 
-<p>For each census tract (U.S.) or census division (Canada), the straight-line (haversine) distance from the population-weighted centroid to the nearest PCI hospital was computed using a KD-tree nearest-neighbor search. This distance was then converted to an estimated drive time using two approaches, both of which are presented.</p>
+<p>For each census tract (U.S.) or census division (Canada), I computed the straight-line (haversine) distance from the population-weighted centroid to the nearest PCI hospital using a KD-tree nearest-neighbor search. I then converted this distance to a time estimate using two approaches, both of which I present for both countries.</p>
 
-<h3>Approach 1: Estimated drive time (primary U.S. analysis)</h3>
+<h3>Approach 1: Estimated drive time</h3>
 
-<p>The primary U.S. analysis reports <strong>estimated drive time</strong> — the time a vehicle would take to drive from the community centroid to the nearest PCI hospital, accounting for the fact that roads are longer than straight-line distance and that driving speeds differ between urban and rural settings.</p>
+<p>Estimated drive time measures how long it takes to drive from the community centroid to the nearest PCI hospital, accounting for the fact that roads are longer than straight-line distance and that driving speeds differ between urban and rural settings.</p>
 
 <blockquote>
 Drive time = (straight-line distance × 1.417 road factor) / speed × 60 min/hr<br><br>
@@ -336,9 +336,7 @@ Speed = 40 mph if straight-line distance ≥ 50 miles (rural/highway)
 
 <p>The 1.417 road factor is an empirical multiplier converting straight-line to estimated road distance, derived from the literature comparing haversine to road-network distances across a range of U.S. geographies. The speed differential reflects the observation that shorter trips tend to involve lower-speed local roads, while longer trips involve higher-speed but more circuitous highway routes.</p>
 
-<p>This approach answers the question: <strong>how long would it take to drive from this community to the nearest PCI hospital?</strong> It is the most intuitive metric for patients and policymakers — when someone hears "90 minutes from a hospital," they think of driving time, not total prehospital interval. It is also the component most directly under geographic control and most relevant to decisions about where to place new catheterization laboratories.</p>
-
-<h3>Approach 2: Nallamothu prehospital time (sensitivity analysis; primary for Canada)</h3>
+<h3>Approach 2: Nallamothu prehospital time</h3>
 
 <p>The <a href="https://pubmed.ncbi.nlm.nih.gov/16490843/">Nallamothu et al. (2006)</a> prehospital formula estimates total time from 911 call to hospital arrival, adding ambulance dispatch delay, a round-trip driving factor (the ambulance must drive to the patient before driving to the hospital), and on-scene time to the raw drive time. The formula differs for urban and rural settings:</p>
 
@@ -358,19 +356,9 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
   </tbody>
 </table>
 
-<p>This approach answers a different question: <strong>how long from the moment a patient calls 911 until they arrive at a PCI hospital?</strong> It is the more conservative metric and produces substantially longer time estimates than drive time alone.</p>
+<h3>What each approach measures</h3>
 
-<h3>Why estimated drive time is the primary U.S. metric</h3>
-
-<p>We present estimated drive time as the primary U.S. analysis for three reasons:</p>
-
-<p><strong>First</strong>, the 90-minute threshold in the <a href="https://www.ahajournals.org/doi/10.1161/CIR.0000000000001123">ACC/AHA guidelines</a> refers to first-medical-contact-to-device time — the interval from when trained EMS personnel first encounter the patient to when the coronary artery is opened. This clock starts <em>after</em> the ambulance arrives on scene, not when the patient calls 911. The Nallamothu formula's dispatch and scene-time components occur before this clock starts, making its total prehospital time a different (and broader) measure than what the guideline threshold targets.</p>
-
-<p><strong>Second</strong>, dispatch time and scene time are relatively fixed overhead that apply equally to all communities regardless of their distance from a PCI hospital. Adding 10–12 minutes of fixed overhead to every tract shifts all numbers upward proportionally without changing the relative ranking of communities or the comparison between countries. The geographic access question — which communities can reach a cath lab in time? — is best answered by the variable component: drive time.</p>
-
-<p><strong>Third</strong>, drive time is the metric most directly actionable for infrastructure policy. A decision about where to place a new catheterization laboratory depends on how many people can drive to it within a given time, not on local EMS dispatch protocols (which vary independently and can be optimized separately).</p>
-
-<p>The Nallamothu prehospital analysis is presented as a <strong>sensitivity analysis</strong> for the U.S. and as the <strong>primary analysis for Canada</strong> (where it is applied to the same estimated drive times using haversine × 1.417 road factor). Under Nallamothu, the U.S. proportion beyond 90 minutes increases from 2.0% to 8.4% — the core finding that the vast majority of Americans have timely access is unchanged, and the communities identified as underserved are the same communities in both analyses.</p>
+<p>The two approaches answer different questions. Estimated drive time asks: <strong>how long would it take to drive from this community to the nearest PCI hospital?</strong> Nallamothu prehospital time asks: <strong>how long from the moment a patient calls 911 until they arrive at a PCI hospital?</strong> The Nallamothu formula produces substantially longer time estimates because it includes fixed overhead (dispatch, scene time) and a round-trip driving factor. I present both for both countries so the reader can evaluate the comparison under either framing.</p>
 
 <h3>Time bands</h3>
 
@@ -387,7 +375,7 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
 <!-- 5 -->
 <h2><span class="sec-num">05</span>Bivariate Classification</h2>
 
-<p>Each geographic unit was assigned to one of nine mutually exclusive categories defined by the intersection of time band and population density tier.</p>
+<p>I assigned each geographic unit to one of nine mutually exclusive categories defined by the intersection of time band and population density tier.</p>
 
 <h3>Density thresholds</h3>
 
@@ -399,7 +387,7 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
   </tbody>
 </table>
 
-<p>Canada-specific thresholds were necessary because Canada's overall settlement density is sufficiently low that applying U.S. thresholds would collapse nearly all Canadian census divisions into the sparse category. Canada's 90th-percentile density (213/sq mi) falls <em>below</em> the U.S. sparse threshold of 500/sq mi (the U.S. 30th percentile). When comparing the &gt;90-minute populations across countries, Canadian census divisions are reclassified using U.S. density thresholds to enable meaningful cross-national comparison.</p>
+<p>I used Canada-specific thresholds because Canada's overall settlement density is sufficiently low that applying U.S. thresholds would collapse nearly all Canadian census divisions into the sparse category. Canada's dense threshold (213/sq mi) — which captures the top 15% of census divisions by count, containing 66% of the population — falls <em>below</em> the U.S. sparse threshold of 500/sq mi (the U.S. 30th percentile).</p>
 
 <h3>The 3×3 matrix — policy interpretation</h3>
 
@@ -416,7 +404,7 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
 <!-- 6 -->
 <h2><span class="sec-num">06</span>Key Results</h2>
 
-<h3>United States — estimated drive time (primary analysis)</h3>
+<h3>United States — estimated drive time</h3>
 
 <table>
   <thead><tr><th>Band</th><th>Population</th><th>Share</th></tr></thead>
@@ -429,7 +417,7 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
 
 <p>The 6.4 million beyond 90 minutes of drive time: <strong>4.7M sparse</strong> (1.4%), <strong>1.6M moderate</strong> (0.5%), <strong>108K dense</strong> (&lt;0.1% — geographic anomalies: Hawaii, Florida Keys, Missoula corridor).</p>
 
-<h3>United States — Nallamothu prehospital time (sensitivity analysis)</h3>
+<h3>United States — Nallamothu prehospital time</h3>
 
 <table>
   <thead><tr><th>Band</th><th>Population</th><th>Share</th></tr></thead>
@@ -442,7 +430,18 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
 
 <p>Under the full Nallamothu formula, the proportion beyond 90 minutes increases from 2.0% to 8.4%. The communities identified as underserved are the same — the additional 21 million people pushed beyond 90 minutes are predominantly moderate-density tracts in the 30–90 minute drive-time band that cross the 90-minute threshold once dispatch, round-trip, and scene overhead are added. The geographic pattern does not change; the threshold shifts.</p>
 
-<h3>Canada — Nallamothu prehospital time (primary analysis)</h3>
+<h3>Canada — estimated drive time</h3>
+
+<table>
+  <thead><tr><th>Band</th><th>Population</th><th>Share</th></tr></thead>
+  <tbody>
+    <tr><td>&lt; 30 min</td><td>25.6M</td><td>69.2%</td></tr>
+    <tr><td>30–90 min</td><td>4.4M</td><td>12.0%</td></tr>
+    <tr><td>&gt; 90 min</td><td>7.0M</td><td>18.8%</td></tr>
+  </tbody>
+</table>
+
+<h3>Canada — Nallamothu prehospital time</h3>
 
 <table>
   <thead><tr><th>Band</th><th>Population</th><th>Share</th></tr></thead>
@@ -453,12 +452,12 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
   </tbody>
 </table>
 
-<p>The 9.1 million beyond 90 minutes: <strong>4.1M sparse</strong> (11.0%), <strong>3.7M moderate</strong> (9.9%), <strong>1.3M dense</strong> (3.5% — 11 census divisions including Francheville/Trois-Rivières, Sherbrooke, and Nanaimo).</p>
+<p>The 9.1 million beyond 90 minutes of Nallamothu prehospital time: <strong>4.1M sparse</strong> (11.0%), <strong>3.7M moderate</strong> (9.9%), <strong>1.3M dense</strong> (3.5% — 11 census divisions including Francheville/Trois-Rivières, Sherbrooke, and Nanaimo).</p>
 
 <h3>U.S.–Canada comparison</h3>
 
 <div class="callout">
-  <p><strong>Under estimated drive time:</strong> 2.0% of Americans vs 24.5% of Canadians beyond 90 minutes — ~13× worse per capita in Canada.</p>
+  <p><strong>Under estimated drive time:</strong> 2.0% of Americans vs 18.8% of Canadians beyond 90 minutes — ~10× worse per capita in Canada.</p>
   <p><strong>Under Nallamothu prehospital time:</strong> 8.4% of Americans vs 24.5% of Canadians — ~3× worse per capita in Canada.</p>
   <p>Under either methodology, Canada leaves a substantially larger share of its population beyond the guideline window. By U.S. density classification, 96.5% of Canadians beyond 90 minutes would be classified as U.S.-sparse (&lt; 500/sq mi). Canada's densest unserved communities do not reach the density at which the U.S. begins classifying areas as <em>rural</em>.</p>
 </div>
@@ -467,9 +466,9 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
 <!-- 7 -->
 <h2><span class="sec-num">07</span>Limitations</h2>
 
-<p><strong>Drive time estimation.</strong> Both drive time and prehospital time are estimates derived from straight-line distance with empirical correction factors, not real-time or road-network routing. They do not account for traffic congestion, seasonal road conditions (particularly relevant in northern Canada), road closures, or EMS-specific routing.</p>
+<p><strong>Drive time estimation.</strong> Both drive time and prehospital time are estimates I derived from straight-line distance with empirical correction factors, not real-time or road-network routing. They do not account for traffic congestion, seasonal road conditions (particularly relevant in northern Canada), road closures, or EMS-specific routing.</p>
 
-<p><strong>Urban speed assignment for Canada.</strong> The Nallamothu formula assigns urban speed parameters (35 mph) to census divisions above Canada's dense threshold (&gt; 213/sq mi). For intercity highway drives — such as Trois-Rivières to Quebec City (66 straight-line miles of predominantly highway driving) — this likely understates actual travel speed and overstates prehospital time. This bias makes the Canadian numbers conservative: the true access picture is likely somewhat better than reported. We retained the formula as specified rather than introducing ad hoc speed adjustments, accepting that this makes the comparison more generous to Canada, not less.</p>
+<p><strong>Urban speed assignment for Canada.</strong> The Nallamothu formula assigns urban speed parameters (35 mph) to census divisions above Canada's dense threshold (&gt; 213/sq mi). For intercity highway drives — such as Trois-Rivières to Quebec City (66 straight-line miles of predominantly highway driving) — this likely understates actual travel speed and overstates prehospital time. This bias makes the Canadian numbers conservative: the true access picture is likely somewhat better than reported. I retained the formula as specified rather than introducing ad hoc speed adjustments, accepting that this makes the comparison more generous to Canada, not less.</p>
 
 <p><strong>U.S. hospital identification.</strong> Medicare DRG billing identifies hospitals with demonstrated PCI activity but does not verify 24/7 primary PCI capability. Some identified hospitals may perform only elective daytime PCI, which would overestimate true emergency access for the U.S.</p>
 
@@ -477,11 +476,9 @@ Prehospital time = 2.9 min (dispatch) + drive time × 1.4 (round-trip factor) + 
 
 <p><strong>Geographic granularity mismatch.</strong> U.S. census tracts (~4,000 residents, ~84,000 units) are far more granular than Canadian census divisions (~126,000 residents average, 293 units). The Canadian analysis cannot capture within-division variation — a large census division may contain both a well-served urban core and an underserved rural periphery.</p>
 
-<p><strong>Methodological asymmetry in U.S.–Canada comparison.</strong> The primary U.S. analysis uses estimated drive time, while the Canadian analysis uses the full Nallamothu prehospital formula. This means the U.S. and Canadian numbers in the primary comparison (2.0% vs 24.5%) are not methodologically identical — the Canadian number includes dispatch, scene, and round-trip overhead that the U.S. number does not. The Nallamothu sensitivity analysis (8.4% vs 24.5%) provides the methodologically parallel comparison. Under either framing, the Canada–U.S. gap is substantial.</p>
+<p><strong>No incidence weighting.</strong> This analysis characterizes access for the general population, not weighted by STEMI incidence. Age, sex, race, and socioeconomic composition vary across density tiers and drive-time bands in ways that affect the expected burden of acute coronary events.</p>
 
-<p><strong>No incidence weighting.</strong> The analysis characterizes access for the general population, not weighted by STEMI incidence. Age, sex, race, and socioeconomic composition vary across density tiers and drive-time bands in ways that affect the expected burden of acute coronary events.</p>
-
-<p><strong>No air transport.</strong> The analysis considers ground transport only. Helicopter EMS can dramatically reduce effective transport times for remote communities.</p>
+<p><strong>No air transport.</strong> This analysis considers ground transport only. Helicopter EMS can dramatically reduce effective transport times for remote communities.</p>
 
 
 <!-- 8 -->
